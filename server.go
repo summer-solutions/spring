@@ -1,0 +1,202 @@
+package spring
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"runtime/debug"
+	"time"
+
+	"github.com/summer-solutions/spring/service"
+
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/text"
+	"github.com/gin-contrib/timeout"
+	"github.com/gin-gonic/gin"
+	"github.com/sarulabs/di"
+)
+
+const ModeLocal = "local"
+const ModeDev = "dev"
+const ModeDemo = "demo"
+const ModeProd = "prod"
+const ModeTest = "test"
+
+type InitHandler func(s *Server, def *Def)
+type GinMiddleware func(engine *gin.Engine) error
+type Def struct {
+	Name  string
+	scope string
+	Build func(ctn di.Container) (interface{}, error)
+	Close func(obj interface{}) error
+}
+
+type Server struct {
+	mode            string
+	initHandlers    []InitHandler
+	requestServices []InitHandler
+	middlewares     []GinMiddleware
+}
+
+func NewServer(handler InitHandler, middlewares ...GinMiddleware) *Server {
+	mode, hasMode := os.LookupEnv("SPRING_MODE")
+	if !hasMode {
+		mode = ModeProd
+	}
+
+	s := &Server{mode: mode, middlewares: middlewares}
+
+	s.initializeIoCHandlers(handler)
+
+	return s
+}
+
+func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = fmt.Sprintf("%d", defaultPort)
+	}
+	r := gin.New()
+
+	if !s.IsInProdMode() {
+		log.SetHandler(json.Default)
+		log.SetLevel(log.WarnLevel)
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		log.SetHandler(text.Default)
+		log.SetLevel(log.DebugLevel)
+		r.Use(gin.Logger())
+	}
+
+	r.Use(ginContextToContextMiddleware())
+
+	s.attachMiddlewares(r)
+
+	r.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
+	r.GET("/", playgroundHandler())
+	panic(r.Run(":" + port))
+}
+
+func (s *Server) RegisterGlobalServices(handlers ...InitHandler) {
+	s.initHandlers = append(s.initHandlers, handlers...)
+}
+
+func (s *Server) RegisterRequestServices(handlers ...InitHandler) {
+	s.requestServices = append(s.requestServices, handlers...)
+}
+
+func (s *Server) initializeIoCHandlers(handlerRegister InitHandler) {
+	ioCBuilder, _ := di.NewBuilder()
+
+	handlerRegister(s, nil)
+
+	scopes := map[string][]InitHandler{di.App: s.initHandlers, di.Request: s.requestServices}
+	for scope, services := range scopes {
+		for _, callback := range services {
+			def := &Def{scope: scope}
+
+			callback(s, def)
+			if def.Name == "" {
+				panic("IoC " + scope + " service is registered without name")
+			}
+
+			if def.Build == nil {
+				panic("IoC " + scope + " service is registered without Build function")
+			}
+
+			err := ioCBuilder.Add(di.Def{
+				Name:  def.Name,
+				Scope: def.scope,
+				Build: def.Build,
+				Close: def.Close,
+			})
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	service.SetGlobalContainer(ioCBuilder.Build())
+}
+
+func (s *Server) attachMiddlewares(engine *gin.Engine) {
+	for _, middleware := range s.middlewares {
+		err := middleware(engine)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (s *Server) IsInLocalMode() bool {
+	return s.mode == ModeLocal
+}
+
+func (s *Server) IsInProdMode() bool {
+	return s.mode == ModeProd
+}
+
+func (s *Server) IsInDevMode() bool {
+	return s.mode == ModeDev
+}
+
+func (s *Server) IsInDemoMode() bool {
+	return s.mode == ModeDemo
+}
+
+func (s *Server) IsInTestMode() bool {
+	return s.mode == ModeTest
+}
+
+func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
+	h := handler.New(server)
+
+	h.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+	})
+	h.AddTransport(transport.Options{})
+	h.AddTransport(transport.POST{})
+
+	h.SetQueryCache(lru.New(1000))
+
+	h.Use(extension.Introspection{})
+	h.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New(100),
+	})
+	h.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		var message string
+		asErr, is := err.(error)
+		if is {
+			message = asErr.Error()
+		} else {
+			message = "panic"
+		}
+		service.Log().Error(message + "\n" + string(debug.Stack()))
+		return errors.New("internal server error")
+	})
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func playgroundHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL", "/query")
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func ginContextToContextMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := context.WithValue(c.Request.Context(), "GinContextKey", c)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
+}
