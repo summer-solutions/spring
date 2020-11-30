@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/summer-solutions/orm"
 	"github.com/summer-solutions/spring/service/config"
 
 	"github.com/apex/log"
@@ -44,4 +45,12 @@ func Log() log.Interface {
 
 func Config() *config.ViperConfig {
 	return GetGlobalContainer().Get("config").(*config.ViperConfig)
+}
+
+func OrmConfig() orm.ValidatedRegistry {
+	return GetGlobalContainer().Get("orm_config").(orm.ValidatedRegistry)
+}
+
+func OrmEngineContext(ctx context.Context) *orm.Engine {
+	return GetRequestContainer(ctx).Get("orm_context").(*orm.Engine)
 }
