@@ -3,6 +3,7 @@ package global
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/summer-solutions/spring"
 
@@ -19,14 +20,7 @@ type RegistryInitFunc func(registry *orm.Registry)
 
 func OrmConfigGlobalService(init RegistryInitFunc) spring.InitHandler {
 	return func(s *spring.Server, def *spring.Def) {
-		registry, err := initOrmRegistry(s)
-		if err != nil {
-			panic(err)
-		}
-
-		init(registry)
-
-		err = initOrmConfig(registry, def)
+		err := initOrmConfig(s, init, def)
 		if err != nil {
 			panic(err)
 		}
@@ -59,26 +53,52 @@ func initOrmRegistry(_ *spring.Server) (*orm.Registry, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	data := make(map[string]interface{})
-	for k, v := range parsedYaml["orm"].(map[interface{}]interface{}) {
+
+	config := parsedYaml["orm"].(map[interface{}]interface{})
+	loadEnvConfig(config)
+
+	for k, v := range config {
 		data[k.(string)] = v
 	}
 
 	return orm.InitByYaml(data), nil
 }
 
-func initOrmConfig(registry *orm.Registry, def *spring.Def) error {
-	var err error
+func loadEnvConfig(configData map[interface{}]interface{}) {
+	for k, v := range configData {
+		_, isString := v.(string)
+		_, isInt := v.(int)
 
-	ormConfig, err = registry.Validate()
-
-	if err != nil {
-		return err
+		if !isString && !isInt {
+			loadEnvConfig(v.(map[interface{}]interface{}))
+		} else if isString {
+			if strings.HasPrefix(v.(string), "ENV[") {
+				envKey := strings.TrimLeft(strings.TrimRight(v.(string), "]"), "ENV[")
+				envVal := os.Getenv(envKey)
+				if envVal == "" {
+					panic("missing value for ENV variable " + v.(string))
+				}
+				configData[k] = envVal
+			}
+		}
 	}
+}
 
+func initOrmConfig(s *spring.Server, init RegistryInitFunc, def *spring.Def) error {
 	def.Name = "orm_config"
 	def.Build = func(ctn di.Container) (interface{}, error) {
-		return ormConfig, nil
+		ctn.Get("config") //we need to init viper config because it loads env vars
+
+		registry, err := initOrmRegistry(s)
+		if err != nil {
+			return nil, err
+		}
+		ormConfig, err = registry.Validate()
+
+		init(registry)
+		return ormConfig, err
 	}
 
 	return nil

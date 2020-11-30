@@ -1,10 +1,12 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -34,9 +36,41 @@ func NewViperConfig(localConfigFile string) (*ViperConfig, error) {
 		return nil, err
 	}
 
-	return &ViperConfig{
+	viperConfig := &ViperConfig{
 		viper.GetViper(),
-	}, nil
+	}
+
+	err = viperConfig.loadEnvConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return viperConfig, nil
+}
+
+func (v *ViperConfig) loadEnvConfig() error {
+	if _, err := os.Stat(v.GetMainPath() + "/../.env.local"); os.IsNotExist(err) {
+		return nil
+	}
+
+	err := godotenv.Load(v.GetMainPath() + "/../.env.local")
+	if err != nil {
+		return err
+	}
+
+	for _, key := range v.Viper.AllKeys() {
+		val, ok := v.Viper.Get(key).(string)
+		if ok && strings.HasPrefix(v.Viper.Get(key).(string), "ENV[") {
+			envKey := strings.TrimLeft(strings.TrimRight(val, "]"), "ENV[")
+			envVal := os.Getenv(envKey)
+			if envVal == "" {
+				return errors.New("missing value for ENV variable " + envKey)
+			}
+			v.Viper.Set(key, os.Getenv(envKey))
+		}
+	}
+
+	return nil
 }
 
 func (v *ViperConfig) GetMainPath() string {
