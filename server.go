@@ -12,6 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/summer-solutions/orm"
 
+	ginSpring "github.com/summer-solutions/spring/gin"
+
 	"github.com/summer-solutions/spring/service"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -30,9 +32,7 @@ import (
 
 const ModeLocal = "local"
 const ModeDev = "dev"
-const ModeDemo = "demo"
 const ModeProd = "prod"
-const ModeTest = "test"
 
 type InitHandler func(s *Server, def *Def)
 type GinMiddleware func(engine *gin.Engine) error
@@ -71,8 +71,13 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	}
 	r := gin.New()
 
-	if !s.IsInProdMode() {
-		log.SetHandler(json.Default)
+	if s.IsInProdMode() {
+		h, err := service.GetGlobalContainer().SafeGet("log_handler")
+		if err == nil {
+			log.SetHandler(h.(log.Handler))
+		} else {
+			log.SetHandler(json.Default)
+		}
 		log.SetLevel(log.WarnLevel)
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -81,7 +86,7 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 		r.Use(gin.Logger())
 	}
 
-	r.Use(ginContextToContextMiddleware())
+	r.Use(ginSpring.ContextToContextMiddleware())
 
 	s.attachMiddlewares(r)
 
@@ -177,23 +182,19 @@ func (s *Server) attachMiddlewares(engine *gin.Engine) {
 }
 
 func (s *Server) IsInLocalMode() bool {
-	return s.mode == ModeLocal
+	return s.IsInMode(ModeLocal)
 }
 
 func (s *Server) IsInProdMode() bool {
-	return s.mode == ModeProd
+	return s.IsInMode(ModeProd)
 }
 
 func (s *Server) IsInDevMode() bool {
-	return s.mode == ModeDev
+	return s.IsInMode(ModeDev)
 }
 
-func (s *Server) IsInDemoMode() bool {
-	return s.mode == ModeDemo
-}
-
-func (s *Server) IsInTestMode() bool {
-	return s.mode == ModeTest
+func (s *Server) IsInMode(mode string) bool {
+	return s.mode == mode
 }
 
 func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
@@ -231,13 +232,5 @@ func playgroundHandler() gin.HandlerFunc {
 	h := playground.Handler("GraphQL", "/query")
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
-	}
-}
-
-func ginContextToContextMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := context.WithValue(c.Request.Context(), "GinContextKey", c)
-		c.Request = c.Request.WithContext(ctx)
-		c.Next()
 	}
 }

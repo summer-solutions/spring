@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 
+	"github.com/summer-solutions/spring/service/log"
+
 	"github.com/summer-solutions/orm"
 	"github.com/summer-solutions/spring/service/config"
 
-	"github.com/apex/log"
+	apexLog "github.com/apex/log"
 	"github.com/gin-gonic/gin"
 	"github.com/sarulabs/di"
 )
@@ -39,8 +41,8 @@ func GetRequestContainer(ctx context.Context) di.Container {
 	return ioCRequestContainer
 }
 
-func Log() log.Interface {
-	return GetGlobalContainer().Get("log").(log.Interface)
+func Log() apexLog.Interface {
+	return GetGlobalContainer().Get("log").(apexLog.Interface)
 }
 
 func Config() *config.ViperConfig {
@@ -49,6 +51,10 @@ func Config() *config.ViperConfig {
 
 func OrmConfig() orm.ValidatedRegistry {
 	return GetGlobalContainer().Get("orm_config").(orm.ValidatedRegistry)
+}
+
+func LogContext(ctx context.Context) *log.RequestLog {
+	return GetRequestContainer(ctx).Get("log_request").(*log.RequestLog)
 }
 
 func OrmEngineContext(ctx context.Context) *orm.Engine {
