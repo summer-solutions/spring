@@ -66,15 +66,18 @@ func OrmConfig() (orm.ValidatedRegistry, bool) {
 }
 
 func LogContext(ctx context.Context) (*log.RequestLog, bool) {
-	v, err := GetGlobalContainer().SafeGet("log_request")
+	v, err := GetRequestContainer(ctx).SafeGet("log_request")
 	if err == nil {
 		return v.(*log.RequestLog), true
 	}
 	return nil, false
 }
 
+/**
+Returns Log associated to current http request
+*/
 func OrmEngineContext(ctx context.Context) (*orm.Engine, bool) {
-	v, err := GetGlobalContainer().SafeGet("orm_engine")
+	v, err := GetRequestContainer(ctx).SafeGet("orm_engine")
 	if err == nil {
 		return v.(*orm.Engine), true
 	}
