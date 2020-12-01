@@ -69,6 +69,9 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
+	if s.IsInProdMode() {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	r := gin.New()
 
 	if s.IsInProdMode() {
@@ -79,7 +82,6 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 			log.SetHandler(json.Default)
 		}
 		log.SetLevel(log.WarnLevel)
-		gin.SetMode(gin.ReleaseMode)
 	} else {
 		log.SetHandler(text.Default)
 		log.SetLevel(log.DebugLevel)
