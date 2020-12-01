@@ -30,10 +30,12 @@ const ModeLocal = "local"
 const ModeDev = "dev"
 const ModeProd = "prod"
 
+type GinMiddleWareProvider func(ctn di.Container) gin.HandlerFunc
+
 type Server struct {
 	mode                  string
-	ciServicesDefinitions []*CIServiceDefinition
-	middlewares           []gin.HandlerFunc
+	DIServicesDefinitions []*DIServiceDefinition
+	middlewares           []GinMiddleWareProvider
 }
 
 func NewServer() *Server {
@@ -45,13 +47,13 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) RegisterCIService(service ...*CIServiceDefinition) *Server {
-	s.ciServicesDefinitions = append(s.ciServicesDefinitions, service...)
+func (s *Server) RegisterDIService(service ...*DIServiceDefinition) *Server {
+	s.DIServicesDefinitions = append(s.DIServicesDefinitions, service...)
 	return s
 }
 
-func (s *Server) RegisterGinMiddleware(middleware ...gin.HandlerFunc) *Server {
-	s.middlewares = append(s.middlewares, middleware...)
+func (s *Server) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Server {
+	s.middlewares = append(s.middlewares, provider...)
 	return s
 }
 
@@ -82,9 +84,10 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	}
 
 	r.Use(ginSpring.ContextToContextMiddleware())
-	for _, m := range s.middlewares {
-		if m != nil {
-			r.Use(m)
+	for _, provider := range s.middlewares {
+		middleware := provider(container)
+		if middleware != nil {
+			r.Use(middleware)
 		}
 	}
 
@@ -101,7 +104,7 @@ func (s *Server) preDeploy() {
 		return
 	}
 
-	ormConfigService, has := CIOrmConfig()
+	ormConfigService, has := DIOrmConfig()
 	if !has {
 		return
 	}
@@ -131,7 +134,10 @@ func (s *Server) preDeploy() {
 func (s *Server) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	for _, def := range s.ciServicesDefinitions {
+	for _, def := range s.DIServicesDefinitions {
+		if def == nil {
+			continue
+		}
 		var scope string
 		if def.Global {
 			scope = di.App
@@ -191,7 +197,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		l, has := CILog()
+		l, has := DILog()
 		if has {
 			l.Error(errorMessage)
 		} else {

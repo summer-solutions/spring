@@ -20,7 +20,7 @@ func GetContainer() di.Container {
 	return container
 }
 
-type CIServiceDefinition struct {
+type DIServiceDefinition struct {
 	Name   string
 	Global bool
 	Build  func(ctn di.Container) (interface{}, error)
@@ -45,7 +45,7 @@ func GetContainerForRequest(ctx context.Context) di.Container {
 	return ioCRequestContainer
 }
 
-func CILog() (apexLog.Interface, bool) {
+func DILog() (apexLog.Interface, bool) {
 	v, err := GetContainer().SafeGet("log")
 	if err == nil {
 		return v.(apexLog.Interface), true
@@ -53,7 +53,7 @@ func CILog() (apexLog.Interface, bool) {
 	return nil, false
 }
 
-func CIConfig() (*config.ViperConfig, bool) {
+func DIConfig() (*config.ViperConfig, bool) {
 	v, err := GetContainer().SafeGet("config")
 	if err == nil {
 		return v.(*config.ViperConfig), true
@@ -61,7 +61,7 @@ func CIConfig() (*config.ViperConfig, bool) {
 	return nil, false
 }
 
-func CIOrmConfig() (orm.ValidatedRegistry, bool) {
+func DIOrmConfig() (orm.ValidatedRegistry, bool) {
 	v, err := GetContainer().SafeGet("orm_config")
 	if err == nil {
 		return v.(orm.ValidatedRegistry), true
@@ -69,7 +69,7 @@ func CIOrmConfig() (orm.ValidatedRegistry, bool) {
 	return nil, false
 }
 
-func CILogForContext(ctx context.Context) (*log.RequestLog, bool) {
+func DILogForContext(ctx context.Context) (*log.RequestLog, bool) {
 	v, err := GetContainerForRequest(ctx).SafeGet("log_request")
 	if err == nil {
 		return v.(*log.RequestLog), true
@@ -77,7 +77,7 @@ func CILogForContext(ctx context.Context) (*log.RequestLog, bool) {
 	return nil, false
 }
 
-func CIOrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
+func DIOrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
 	v, err := GetContainerForRequest(ctx).SafeGet("orm_engine")
 	if err == nil {
 		return v.(*orm.Engine), true

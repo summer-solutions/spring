@@ -18,8 +18,8 @@ var ormConfig orm.ValidatedRegistry
 
 type RegistryInitFunc func(registry *orm.Registry)
 
-func OrmRegistry(init RegistryInitFunc) *spring.CIServiceDefinition {
-	return &spring.CIServiceDefinition{
+func OrmRegistry(init RegistryInitFunc) *spring.DIServiceDefinition {
+	return &spring.DIServiceDefinition{
 		Name:   "orm_config",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
