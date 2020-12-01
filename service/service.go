@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 
+	ginLocal "github.com/summer-solutions/spring/gin"
+
 	"github.com/summer-solutions/spring/service/log"
 
 	"github.com/summer-solutions/orm"
 	"github.com/summer-solutions/spring/service/config"
 
 	apexLog "github.com/apex/log"
-	"github.com/gin-gonic/gin"
 	"github.com/sarulabs/di"
 )
 
@@ -24,7 +25,7 @@ func GetGlobalContainer() di.Container {
 }
 
 func GetRequestContainer(ctx context.Context) di.Container {
-	c := ctx.Value("GinContextKey").(*gin.Context)
+	c := ginLocal.FromContext(ctx)
 
 	requestContainer, has := c.Get("RequestContainer")
 	if has {
