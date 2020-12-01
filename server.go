@@ -104,7 +104,7 @@ func (s *Server) RegisterRequestServices(handlers ...InitHandler) {
 }
 
 func (s *Server) preDeploy() {
-	if s.IsInTestMode() {
+	if s.IsInProdMode() {
 		return
 	}
 
