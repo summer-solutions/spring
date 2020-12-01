@@ -45,12 +45,14 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) RegisterCDService(service ...*CDServiceDefinition) {
+func (s *Server) RegisterCDService(service ...*CDServiceDefinition) *Server {
 	s.cdServicesDefinitions = append(s.cdServicesDefinitions, service...)
+	return s
 }
 
-func (s *Server) RegisterGinMiddleware(middleware ...gin.HandlerFunc) {
+func (s *Server) RegisterGinMiddleware(middleware ...gin.HandlerFunc) *Server {
 	s.middlewares = append(s.middlewares, middleware...)
+	return s
 }
 
 func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
