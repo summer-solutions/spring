@@ -3,58 +3,77 @@ package spring
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
+	ginLocal "github.com/summer-solutions/spring/gin"
+
+	"github.com/summer-solutions/spring/service/log"
+
+	"github.com/summer-solutions/orm"
+	"github.com/summer-solutions/spring/service/config"
+
+	apexLog "github.com/apex/log"
+	"github.com/sarulabs/di"
 )
 
-type Container struct {
-	ctx       context.Context
-	providers map[interface{}]ServiceProvider
+var container di.Container
+
+func GetContainer() di.Container {
+	return container
 }
 
-type ServiceProvider interface {
-	Key() interface{}
-	Get(ctx context.Context) interface{}
-}
+func GetContainerForRequest(ctx context.Context) di.Container {
+	c := ginLocal.FromContext(ctx)
 
-func (c *Container) New(ctx context.Context, provider ...ServiceProvider) *Container {
-	instance := &Container{ctx: ctx, providers: make(map[interface{}]ServiceProvider)}
-	for _, p := range provider {
-		instance.RegisterService(p)
+	requestContainer, has := c.Get("RequestContainer")
+	if has {
+		return requestContainer.(di.Container)
 	}
-	return instance
-}
 
-func (c *Container) Get(key interface{}) (val interface{}, has bool) {
-	val = c.ctx.Value(key)
-	if val == nil {
-		provider, has := c.providers[key]
-		if !has {
-			return nil, false
-		}
-		val = provider.Get(c.ctx)
-		c.ctx = context.WithValue(c.ctx, key, val)
+	ioCRequestContainer, err := container.SubContainer()
+	c.Set("RequestContainer", ioCRequestContainer)
+
+	if err != nil {
+		panic(err)
 	}
-	return val, val != nil
+
+	return ioCRequestContainer
 }
 
-func (c *Container) MustGet(key interface{}) interface{} {
-	val, _ := c.Get(key)
-	return val
-}
-
-func (c *Container) GetFromRequest(ctx *gin.Context, key string) (val interface{}, has bool) {
-	val, has = ctx.Get(key)
-	if !has {
-		provider, has := c.providers[key]
-		if !has {
-			return nil, false
-		}
-		val = provider.Get(c.ctx)
-		ctx.Set(key, val)
+func CDLog() (apexLog.Interface, bool) {
+	v, err := GetContainer().SafeGet("log")
+	if err == nil {
+		return v.(apexLog.Interface), true
 	}
-	return val, has
+	return nil, false
 }
 
-func (c *Container) RegisterService(provider ServiceProvider) {
-	c.providers[provider.Key()] = provider
+func CDConfig() (*config.ViperConfig, bool) {
+	v, err := GetContainer().SafeGet("config")
+	if err == nil {
+		return v.(*config.ViperConfig), true
+	}
+	return nil, false
+}
+
+func CDOrmConfig() (orm.ValidatedRegistry, bool) {
+	v, err := GetContainer().SafeGet("orm_config")
+	if err == nil {
+		return v.(orm.ValidatedRegistry), true
+	}
+	return nil, false
+}
+
+func CDLogForContext(ctx context.Context) (*log.RequestLog, bool) {
+	v, err := GetContainerForRequest(ctx).SafeGet("log_request")
+	if err == nil {
+		return v.(*log.RequestLog), true
+	}
+	return nil, false
+}
+
+func CDOrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
+	v, err := GetContainerForRequest(ctx).SafeGet("orm_engine")
+	if err == nil {
+		return v.(*orm.Engine), true
+	}
+	return nil, false
 }

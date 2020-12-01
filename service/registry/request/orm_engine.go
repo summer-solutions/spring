@@ -1,10 +1,9 @@
 package request
 
 import (
-	"fmt"
+	"github.com/summer-solutions/orm"
 
 	"github.com/summer-solutions/spring"
-	"github.com/summer-solutions/spring/service"
 
 	"github.com/sarulabs/di"
 )
@@ -13,12 +12,11 @@ var OrmEngineRequestService spring.InitHandler = func(s *spring.Server, def *spr
 
 	def.Name = "orm_engine"
 	def.Build = func(ctn di.Container) (interface{}, error) {
-		ormConfigService, has := service.OrmConfig()
-		if !has {
-			return nil, fmt.Errorf("missing orm config service")
+		ormConfigService, err := ctn.SafeGet("orm_config")
+		if err != nil {
+			return nil, err
 		}
-		ormEngine := ormConfigService.CreateEngine()
-		ormEngine.SetLogMetaData("Source", "web-api")
+		ormEngine := ormConfigService.(orm.ValidatedRegistry).CreateEngine()
 		return ormEngine, nil
 	}
 }

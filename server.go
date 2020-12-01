@@ -12,8 +12,6 @@ import (
 	"github.com/fatih/color"
 	ginSpring "github.com/summer-solutions/spring/gin"
 
-	"github.com/summer-solutions/spring/service"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -73,7 +71,7 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	r := gin.New()
 
 	if s.IsInProdMode() {
-		h, err := service.GetGlobalContainer().SafeGet("log_handler")
+		h, err := GetContainer().SafeGet("log_handler")
 		if err == nil {
 			log.SetHandler(h.(log.Handler))
 		} else {
@@ -111,7 +109,7 @@ func (s *Server) preDeploy() {
 		return
 	}
 
-	ormConfigService, has := service.OrmConfig()
+	ormConfigService, has := CDOrmConfig()
 	if !has {
 		return
 	}
@@ -168,7 +166,7 @@ func (s *Server) initializeIoCHandlers(handlerRegister InitHandler) {
 			}
 		}
 	}
-	service.SetGlobalContainer(ioCBuilder.Build())
+	container = ioCBuilder.Build()
 }
 
 func (s *Server) attachMiddlewares(engine *gin.Engine) {
@@ -220,7 +218,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		l, has := service.Log()
+		l, has := CDLog()
 		if has {
 			l.Error(errorMessage)
 		} else {
