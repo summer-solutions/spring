@@ -52,5 +52,5 @@ func OrmConfig() orm.ValidatedRegistry {
 }
 
 func OrmEngineContext(ctx context.Context) *orm.Engine {
-	return GetRequestContainer(ctx).Get("orm_context").(*orm.Engine)
+	return GetRequestContainer(ctx).Get("orm_engine").(*orm.Engine)
 }

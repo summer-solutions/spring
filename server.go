@@ -3,10 +3,14 @@ package spring
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"runtime/debug"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/summer-solutions/orm"
 
 	"github.com/summer-solutions/spring/service"
 
@@ -56,6 +60,7 @@ func NewServer(handler InitHandler, middlewares ...GinMiddleware) *Server {
 
 	s.initializeIoCHandlers(handler)
 
+	s.preDeploy()
 	return s
 }
 
@@ -91,6 +96,42 @@ func (s *Server) RegisterGlobalServices(handlers ...InitHandler) {
 
 func (s *Server) RegisterRequestServices(handlers ...InitHandler) {
 	s.requestServices = append(s.requestServices, handlers...)
+}
+
+func (s *Server) preDeploy() {
+	if s.IsInTestMode() {
+		return
+	}
+
+	preDeployFlag := flag.Bool("pre-deploy", false, "Execute pre deploy mode")
+	flag.Parse()
+
+	if !*preDeployFlag && !s.IsInLocalMode() {
+		return
+	}
+
+	ormConfigService := service.OrmConfig().(orm.ValidatedRegistry)
+	ormService := ormConfigService.CreateEngine()
+
+	alters := ormService.GetAlters()
+
+	hasAlters := false
+	for _, alter := range alters {
+		if alter.Safe {
+			color.Green("%s\n\n", alter.SQL)
+		} else {
+			color.Red("%s\n\n", alter.SQL)
+		}
+		hasAlters = true
+	}
+
+	if hasAlters {
+		os.Exit(1)
+	}
+
+	if !s.IsInLocalMode() {
+		os.Exit(0)
+	}
 }
 
 func (s *Server) initializeIoCHandlers(handlerRegister InitHandler) {

@@ -89,9 +89,11 @@ func initOrmConfig(s *spring.Server, init RegistryInitFunc, def *spring.Def) err
 		if err != nil {
 			return nil, err
 		}
-		ormConfig, err = registry.Validate()
 
 		init(registry)
+
+		ormConfig, err = registry.Validate()
+
 		return ormConfig, err
 	}
 
