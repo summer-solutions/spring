@@ -7,8 +7,8 @@ import (
 	"github.com/sarulabs/di"
 )
 
-func OrmEngine() *spring.CDServiceDefinition {
-	return &spring.CDServiceDefinition{
+func OrmEngine() *spring.CIServiceDefinition {
+	return &spring.CIServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,
 		Build: func(ctn di.Container) (interface{}, error) {

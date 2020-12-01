@@ -6,8 +6,8 @@ import (
 	"github.com/summer-solutions/spring/services/config"
 )
 
-func Config(configFilePath string) *spring.CDServiceDefinition {
-	return &spring.CDServiceDefinition{
+func Config(configFilePath string) *spring.CIServiceDefinition {
+	return &spring.CIServiceDefinition{
 		Name:   "config",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {

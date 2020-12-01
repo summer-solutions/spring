@@ -32,7 +32,7 @@ const ModeProd = "prod"
 
 type Server struct {
 	mode                  string
-	cdServicesDefinitions []*CDServiceDefinition
+	ciServicesDefinitions []*CIServiceDefinition
 	middlewares           []gin.HandlerFunc
 }
 
@@ -45,8 +45,8 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) RegisterCDService(service ...*CDServiceDefinition) *Server {
-	s.cdServicesDefinitions = append(s.cdServicesDefinitions, service...)
+func (s *Server) RegisterCIService(service ...*CIServiceDefinition) *Server {
+	s.ciServicesDefinitions = append(s.ciServicesDefinitions, service...)
 	return s
 }
 
@@ -101,7 +101,7 @@ func (s *Server) preDeploy() {
 		return
 	}
 
-	ormConfigService, has := CDOrmConfig()
+	ormConfigService, has := CIOrmConfig()
 	if !has {
 		return
 	}
@@ -131,7 +131,7 @@ func (s *Server) preDeploy() {
 func (s *Server) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	for _, def := range s.cdServicesDefinitions {
+	for _, def := range s.ciServicesDefinitions {
 		var scope string
 		if def.Global {
 			scope = di.App
@@ -191,7 +191,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		l, has := CDLog()
+		l, has := CILog()
 		if has {
 			l.Error(errorMessage)
 		} else {

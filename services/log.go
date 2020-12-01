@@ -7,8 +7,8 @@ import (
 	"github.com/summer-solutions/spring/services/log"
 )
 
-func LogGlobal(provider ...log.FieldProvider) *spring.CDServiceDefinition {
-	return &spring.CDServiceDefinition{
+func LogGlobal(provider ...log.FieldProvider) *spring.CIServiceDefinition {
+	return &spring.CIServiceDefinition{
 		Name:   "log",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
@@ -21,8 +21,8 @@ func LogGlobal(provider ...log.FieldProvider) *spring.CDServiceDefinition {
 	}
 }
 
-func LogForRequest(provider ...log.RequestFieldProvider) *spring.CDServiceDefinition {
-	return &spring.CDServiceDefinition{
+func LogForRequest(provider ...log.RequestFieldProvider) *spring.CIServiceDefinition {
+	return &spring.CIServiceDefinition{
 		Name:   "log_request",
 		Global: false,
 		Build: func(ctn di.Container) (interface{}, error) {
