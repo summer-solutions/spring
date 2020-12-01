@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/summer-solutions/spring"
+	"github.com/summer-solutions/spring/service/config"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/fatih/color"
 	"github.com/sarulabs/di"
 	"github.com/summer-solutions/orm"
 )
@@ -24,23 +24,17 @@ func OrmConfigGlobalService(init RegistryInitFunc) spring.InitHandler {
 		if err != nil {
 			panic(err)
 		}
-		if s.IsInLocalMode() {
-			err = checkForAlters(ormConfig)
-			if err != nil {
-				panic(err)
-			}
-		}
 	}
 }
 
-func initOrmRegistry(_ *spring.Server) (*orm.Registry, error) {
+func initOrmRegistry(_ *spring.Server, configService *config.ViperConfig) (*orm.Registry, error) {
 	var yamlFileData []byte
 	var err error
 
 	if os.Getenv("ORM_CONFIG_FILE") != "" {
 		yamlFileData, err = ioutil.ReadFile(os.Getenv("ORM_CONFIG_FILE"))
 	} else {
-		yamlFileData, err = ioutil.ReadFile("../../config/orm/config.yaml")
+		yamlFileData, err = ioutil.ReadFile(configService.GetMainPath() + "/orm/config.yaml")
 	}
 
 	if err != nil {
@@ -89,9 +83,9 @@ func loadEnvConfig(configData map[interface{}]interface{}) {
 func initOrmConfig(s *spring.Server, init RegistryInitFunc, def *spring.Def) error {
 	def.Name = "orm_config"
 	def.Build = func(ctn di.Container) (interface{}, error) {
-		ctn.Get("config") //we need to init viper config because it loads env vars
+		configService := ctn.Get("config").(*config.ViperConfig)
 
-		registry, err := initOrmRegistry(s)
+		registry, err := initOrmRegistry(s, configService)
 		if err != nil {
 			return nil, err
 		}
@@ -99,21 +93,6 @@ func initOrmConfig(s *spring.Server, init RegistryInitFunc, def *spring.Def) err
 
 		init(registry)
 		return ormConfig, err
-	}
-
-	return nil
-}
-
-func checkForAlters(ormConfig orm.ValidatedRegistry) error {
-	engine := ormConfig.CreateEngine()
-
-	alters := engine.GetAlters()
-	for _, alter := range alters {
-		if alter.Safe {
-			color.Green("%s\n\n", alter.SQL)
-		} else {
-			color.Red("%s\n\n", alter.SQL)
-		}
 	}
 
 	return nil

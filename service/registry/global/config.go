@@ -6,9 +6,11 @@ import (
 	"github.com/summer-solutions/spring/service/config"
 )
 
-var ConfigGlobalService spring.InitHandler = func(s *spring.Server, def *spring.Def) {
-	def.Name = "config"
-	def.Build = func(ctn di.Container) (interface{}, error) {
-		return config.NewViperConfig("../../config/web-api/config.local.yaml")
+func ConfigGlobalService(configFilePath string) spring.InitHandler {
+	return func(s *spring.Server, def *spring.Def) {
+		def.Name = "config"
+		def.Build = func(ctn di.Container) (interface{}, error) {
+			return config.NewViperConfig(configFilePath)
+		}
 	}
 }
