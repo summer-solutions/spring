@@ -104,10 +104,6 @@ func (s *Server) RegisterRequestServices(handlers ...InitHandler) {
 }
 
 func (s *Server) preDeploy() {
-	if s.IsInProdMode() {
-		return
-	}
-
 	preDeployFlag := flag.Bool("pre-deploy", false, "Execute pre deploy mode")
 	flag.Parse()
 
