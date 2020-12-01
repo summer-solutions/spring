@@ -82,7 +82,11 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	}
 
 	r.Use(ginSpring.ContextToContextMiddleware())
-	r.Use(s.middlewares...)
+	for _, m := range s.middlewares {
+		if m != nil {
+			r.Use(m)
+		}
+	}
 
 	r.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
 	r.GET("/", playgroundHandler())

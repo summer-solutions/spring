@@ -7,7 +7,7 @@ import (
 	"github.com/sarulabs/di"
 )
 
-func OrmEngine(configFilePath string) *spring.CDServiceDefinition {
+func OrmEngine() *spring.CDServiceDefinition {
 	return &spring.CDServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,
