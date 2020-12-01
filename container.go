@@ -5,10 +5,10 @@ import (
 
 	ginLocal "github.com/summer-solutions/spring/gin"
 
-	"github.com/summer-solutions/spring/service/log"
+	"github.com/summer-solutions/spring/services/log"
 
 	"github.com/summer-solutions/orm"
-	"github.com/summer-solutions/spring/service/config"
+	"github.com/summer-solutions/spring/services/config"
 
 	apexLog "github.com/apex/log"
 	"github.com/sarulabs/di"
@@ -18,6 +18,13 @@ var container di.Container
 
 func GetContainer() di.Container {
 	return container
+}
+
+type CDServiceDefinition struct {
+	Name   string
+	Global bool
+	Build  func(ctn di.Container) (interface{}, error)
+	Close  func(obj interface{}) error
 }
 
 func GetContainerForRequest(ctx context.Context) di.Container {

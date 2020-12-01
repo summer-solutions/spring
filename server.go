@@ -30,37 +30,32 @@ const ModeLocal = "local"
 const ModeDev = "dev"
 const ModeProd = "prod"
 
-type InitHandler func(s *Server, def *Def)
-type GinMiddleware func(engine *gin.Engine) error
-type Def struct {
-	Name  string
-	scope string
-	Build func(ctn di.Container) (interface{}, error)
-	Close func(obj interface{}) error
-}
-
 type Server struct {
-	mode            string
-	initHandlers    []InitHandler
-	requestServices []InitHandler
-	middlewares     []GinMiddleware
+	mode                  string
+	cdServicesDefinitions []*CDServiceDefinition
+	middlewares           []gin.HandlerFunc
 }
 
-func NewServer(handler InitHandler, middlewares ...GinMiddleware) *Server {
+func NewServer() *Server {
 	mode, hasMode := os.LookupEnv("SPRING_MODE")
 	if !hasMode {
 		mode = ModeLocal
 	}
-
-	s := &Server{mode: mode, middlewares: middlewares}
-
-	s.initializeIoCHandlers(handler)
-
-	s.preDeploy()
+	s := &Server{mode: mode}
 	return s
 }
 
+func (s *Server) RegisterCDService(service ...*CDServiceDefinition) {
+	s.cdServicesDefinitions = append(s.cdServicesDefinitions, service...)
+}
+
+func (s *Server) RegisterGinMiddleware(middleware ...gin.HandlerFunc) {
+	s.middlewares = append(s.middlewares, middleware...)
+}
+
 func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
+	s.preDeploy()
+	s.initializeIoCHandlers()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
@@ -85,20 +80,11 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	}
 
 	r.Use(ginSpring.ContextToContextMiddleware())
-
-	s.attachMiddlewares(r)
+	r.Use(s.middlewares...)
 
 	r.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
 	r.GET("/", playgroundHandler())
 	panic(r.Run(":" + port))
-}
-
-func (s *Server) RegisterGlobalServices(handlers ...InitHandler) {
-	s.initHandlers = append(s.initHandlers, handlers...)
-}
-
-func (s *Server) RegisterRequestServices(handlers ...InitHandler) {
-	s.requestServices = append(s.requestServices, handlers...)
 }
 
 func (s *Server) preDeploy() {
@@ -136,46 +122,27 @@ func (s *Server) preDeploy() {
 	}
 }
 
-func (s *Server) initializeIoCHandlers(handlerRegister InitHandler) {
+func (s *Server) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	handlerRegister(s, nil)
-
-	scopes := map[string][]InitHandler{di.App: s.initHandlers, di.Request: s.requestServices}
-	for scope, services := range scopes {
-		for _, callback := range services {
-			def := &Def{scope: scope}
-
-			callback(s, def)
-			if def.Name == "" {
-				panic("IoC " + scope + " service is registered without name")
-			}
-
-			if def.Build == nil {
-				panic("IoC " + scope + " service is registered without Build function")
-			}
-
-			err := ioCBuilder.Add(di.Def{
-				Name:  def.Name,
-				Scope: def.scope,
-				Build: def.Build,
-				Close: def.Close,
-			})
-			if err != nil {
-				panic(err)
-			}
+	for _, def := range s.cdServicesDefinitions {
+		var scope string
+		if def.Global {
+			scope = di.App
+		} else {
+			scope = di.Request
 		}
-	}
-	container = ioCBuilder.Build()
-}
-
-func (s *Server) attachMiddlewares(engine *gin.Engine) {
-	for _, middleware := range s.middlewares {
-		err := middleware(engine)
+		err := ioCBuilder.Add(di.Def{
+			Name:  def.Name,
+			Scope: scope,
+			Build: def.Build,
+			Close: def.Close,
+		})
 		if err != nil {
 			panic(err)
 		}
 	}
+	container = ioCBuilder.Build()
 }
 
 func (s *Server) IsInLocalMode() bool {

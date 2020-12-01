@@ -1,4 +1,4 @@
-package global
+package services
 
 import (
 	"io/ioutil"
@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/summer-solutions/spring"
-	"github.com/summer-solutions/spring/service/config"
+	"github.com/summer-solutions/spring/services/config"
 
 	"gopkg.in/yaml.v2"
 
@@ -18,16 +18,28 @@ var ormConfig orm.ValidatedRegistry
 
 type RegistryInitFunc func(registry *orm.Registry)
 
-func OrmConfigGlobalService(init RegistryInitFunc) spring.InitHandler {
-	return func(s *spring.Server, def *spring.Def) {
-		err := initOrmConfig(s, init, def)
-		if err != nil {
-			panic(err)
-		}
+func OrmRegistry(init RegistryInitFunc) *spring.CDServiceDefinition {
+	return &spring.CDServiceDefinition{
+		Name:   "orm_config",
+		Global: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			configService := ctn.Get("config").(*config.ViperConfig)
+
+			registry, err := initOrmRegistry(configService)
+			if err != nil {
+				return nil, err
+			}
+
+			init(registry)
+
+			ormConfig, err = registry.Validate()
+
+			return ormConfig, err
+		},
 	}
 }
 
-func initOrmRegistry(_ *spring.Server, configService *config.ViperConfig) (*orm.Registry, error) {
+func initOrmRegistry(configService *config.ViperConfig) (*orm.Registry, error) {
 	var yamlFileData []byte
 	var err error
 
@@ -50,10 +62,10 @@ func initOrmRegistry(_ *spring.Server, configService *config.ViperConfig) (*orm.
 
 	data := make(map[string]interface{})
 
-	config := parsedYaml["orm"].(map[interface{}]interface{})
-	loadEnvConfig(config)
+	conf := parsedYaml["orm"].(map[interface{}]interface{})
+	loadEnvConfig(conf)
 
-	for k, v := range config {
+	for k, v := range conf {
 		data[k.(string)] = v
 	}
 
@@ -78,24 +90,4 @@ func loadEnvConfig(configData map[interface{}]interface{}) {
 			}
 		}
 	}
-}
-
-func initOrmConfig(s *spring.Server, init RegistryInitFunc, def *spring.Def) error {
-	def.Name = "orm_config"
-	def.Build = func(ctn di.Container) (interface{}, error) {
-		configService := ctn.Get("config").(*config.ViperConfig)
-
-		registry, err := initOrmRegistry(s, configService)
-		if err != nil {
-			return nil, err
-		}
-
-		init(registry)
-
-		ormConfig, err = registry.Validate()
-
-		return ormConfig, err
-	}
-
-	return nil
 }
