@@ -41,15 +41,15 @@ func GetRequestContainer(ctx context.Context) di.Container {
 	return ioCRequestContainer
 }
 
-func Log() apexLog.Interface {
-	return GetGlobalContainer().Get("log").(apexLog.Interface)
+func Log() (apexLog.Interface, bool) {
+	v, err := GetGlobalContainer().SafeGet("log")
+	if err == nil {
+		return v.(apexLog.Interface), true
+	}
+	return nil, false
 }
 
-func Config() *config.ViperConfig {
-	return GetGlobalContainer().Get("config").(*config.ViperConfig)
-}
-
-func ConfigSafe() (*config.ViperConfig, bool) {
+func Config() (*config.ViperConfig, bool) {
 	v, err := GetGlobalContainer().SafeGet("config")
 	if err == nil {
 		return v.(*config.ViperConfig), true
@@ -57,14 +57,26 @@ func ConfigSafe() (*config.ViperConfig, bool) {
 	return nil, false
 }
 
-func OrmConfig() orm.ValidatedRegistry {
-	return GetGlobalContainer().Get("orm_config").(orm.ValidatedRegistry)
+func OrmConfig() (orm.ValidatedRegistry, bool) {
+	v, err := GetGlobalContainer().SafeGet("orm_config")
+	if err == nil {
+		return v.(orm.ValidatedRegistry), true
+	}
+	return nil, false
 }
 
-func LogContext(ctx context.Context) *log.RequestLog {
-	return GetRequestContainer(ctx).Get("log_request").(*log.RequestLog)
+func LogContext(ctx context.Context) (*log.RequestLog, bool) {
+	v, err := GetGlobalContainer().SafeGet("log_request")
+	if err == nil {
+		return v.(*log.RequestLog), true
+	}
+	return nil, false
 }
 
-func OrmEngineContext(ctx context.Context) *orm.Engine {
-	return GetRequestContainer(ctx).Get("orm_engine").(*orm.Engine)
+func OrmEngineContext(ctx context.Context) (*orm.Engine, bool) {
+	v, err := GetGlobalContainer().SafeGet("orm_engine")
+	if err == nil {
+		return v.(*orm.Engine), true
+	}
+	return nil, false
 }

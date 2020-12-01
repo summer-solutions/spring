@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/summer-solutions/orm"
-
 	ginSpring "github.com/summer-solutions/spring/gin"
 
 	"github.com/summer-solutions/spring/service"
@@ -113,7 +111,10 @@ func (s *Server) preDeploy() {
 		return
 	}
 
-	ormConfigService := service.OrmConfig().(orm.ValidatedRegistry)
+	ormConfigService, has := service.OrmConfig()
+	if !has {
+		return
+	}
 	ormService := ormConfigService.CreateEngine()
 
 	alters := ormService.GetAlters()
@@ -218,7 +219,13 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 		} else {
 			message = "panic"
 		}
-		service.Log().Error(message + "\n" + string(debug.Stack()))
+		errorMessage := message + "\n" + string(debug.Stack())
+		l, has := service.Log()
+		if has {
+			l.Error(errorMessage)
+		} else {
+			log.Error(errorMessage)
+		}
 		return errors.New("internal server error")
 	})
 	return func(c *gin.Context) {
