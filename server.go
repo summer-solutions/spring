@@ -53,7 +53,7 @@ type Server struct {
 func NewServer(handler InitHandler, middlewares ...GinMiddleware) *Server {
 	mode, hasMode := os.LookupEnv("SPRING_MODE")
 	if !hasMode {
-		mode = ModeProd
+		mode = ModeLocal
 	}
 
 	s := &Server{mode: mode, middlewares: middlewares}
