@@ -49,6 +49,11 @@ func Config() *config.ViperConfig {
 	return GetGlobalContainer().Get("config").(*config.ViperConfig)
 }
 
+func ConfigSafe() (*config.ViperConfig, bool) {
+	v, err := GetGlobalContainer().SafeGet("config")
+	return v.(*config.ViperConfig), err != nil
+}
+
 func OrmConfig() orm.ValidatedRegistry {
 	return GetGlobalContainer().Get("orm_config").(orm.ValidatedRegistry)
 }
