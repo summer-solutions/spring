@@ -123,7 +123,7 @@ func SomeResolver(ctx context.Context) {
 
 ```
 
-It's a good practice to create one package in our app that provides all services with simple Getters:
+It's a good practice to create one package in your app that provides all services with simple Getters:
 
 ```go
 package di
