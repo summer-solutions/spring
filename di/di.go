@@ -3,6 +3,8 @@ package di
 import (
 	"context"
 
+	"github.com/summer-solutions/spring/app"
+
 	"github.com/sarulabs/di"
 	ginLocal "github.com/summer-solutions/spring/gin"
 
@@ -45,6 +47,10 @@ func GetContainerForRequest(ctx context.Context) di.Container {
 	}
 
 	return ioCRequestContainer
+}
+
+func App() *app.App {
+	return GetContainer().Get("app").(*app.App)
 }
 
 func Log() (apexLog.Interface, bool) {

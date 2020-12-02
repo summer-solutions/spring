@@ -9,6 +9,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/summer-solutions/spring/app"
+
 	diLocal "github.com/summer-solutions/spring/di"
 
 	"github.com/fatih/color"
@@ -28,23 +30,20 @@ import (
 	"github.com/sarulabs/di"
 )
 
-const ModeLocal = "local"
-const ModeProd = "prod"
-
 type GinMiddleWareProvider func() gin.HandlerFunc
 
 type Server struct {
-	mode                string
+	app                 *app.App
 	servicesDefinitions []*diLocal.ServiceDefinition
 	middlewares         []GinMiddleWareProvider
 }
 
-func NewServer() *Server {
+func NewServer(appName string) *Server {
 	mode, hasMode := os.LookupEnv("SPRING_MODE")
 	if !hasMode {
-		mode = ModeLocal
+		mode = app.ModeLocal
 	}
-	s := &Server{mode: mode}
+	s := &Server{app: &app.App{Mode: mode, Name: appName}}
 	return s
 }
 
@@ -65,12 +64,12 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
-	if s.IsInProdMode() {
+	if s.app.IsInProdMode() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.New()
 
-	if s.IsInProdMode() {
+	if s.app.IsInProdMode() {
 		h, err := diLocal.GetContainer().SafeGet("log_handler")
 		if err == nil {
 			log.SetHandler(h.(log.Handler))
@@ -101,7 +100,7 @@ func (s *Server) preDeploy() {
 	preDeployFlag := flag.Bool("pre-deploy", false, "Execute pre deploy mode")
 	flag.Parse()
 
-	if !*preDeployFlag && !s.IsInLocalMode() {
+	if !*preDeployFlag && !s.app.IsInLocalMode() {
 		return
 	}
 
@@ -127,7 +126,7 @@ func (s *Server) preDeploy() {
 		os.Exit(1)
 	}
 
-	if !s.IsInLocalMode() {
+	if !s.app.IsInLocalMode() {
 		os.Exit(0)
 	}
 }
@@ -139,12 +138,14 @@ func (s *Server) initializeIoCHandlers() {
 		if def == nil {
 			continue
 		}
+
 		var scope string
 		if def.Global {
 			scope = di.App
 		} else {
 			scope = di.Request
 		}
+
 		err := ioCBuilder.Add(di.Def{
 			Name:  def.Name,
 			Scope: scope,
@@ -157,23 +158,19 @@ func (s *Server) initializeIoCHandlers() {
 			panic(err)
 		}
 	}
+
+	err := ioCBuilder.Add(di.Def{
+		Name:  "app",
+		Scope: di.App,
+		Build: func(di.Container) (interface{}, error) {
+			return s.app, nil
+		},
+	})
+
+	if err != nil {
+		panic(err)
+	}
 	diLocal.SetContainer(ioCBuilder.Build())
-}
-
-func (s *Server) IsInLocalMode() bool {
-	return s.IsInMode(ModeLocal)
-}
-
-func (s *Server) IsInProdMode() bool {
-	return s.IsInMode(ModeProd)
-}
-
-func (s *Server) IsInMode(mode string) bool {
-	return s.mode == mode
-}
-
-func (s *Server) GetMode() string {
-	return s.mode
 }
 
 func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {

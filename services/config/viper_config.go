@@ -16,20 +16,15 @@ type ViperConfig struct {
 	*viper.Viper
 }
 
-func NewViperConfig(localConfigFile string) (*ViperConfig, error) {
-	// Consider using ConfigMap from kubernetes instead of file:
-	// https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#add-configmap-data-to-a-volume
-	// TODO: add hot reload for configMap
-	// https://medium.com/@xcoulon/kubernetes-configmap-hot-reload-in-action-with-viper-d413128a1c9a
-
+func NewViperConfig(appName, localConfigFolder string) (*ViperConfig, error) {
 	viper.SetConfigName(configName)
 
-	configFile, hasConfigFile := os.LookupEnv("SPRING_CONFIG_FILE")
-	if hasConfigFile {
-		viper.SetConfigFile(configFile)
-	} else {
-		viper.SetConfigFile(localConfigFile)
+	configFolder, hasConfigFolder := os.LookupEnv("SPRING_CONFIG_FOLDER")
+	if !hasConfigFolder {
+		configFolder = localConfigFolder
 	}
+
+	viper.SetConfigFile(configFolder + "/" + appName + "/config.yaml")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -49,11 +44,12 @@ func NewViperConfig(localConfigFile string) (*ViperConfig, error) {
 }
 
 func (v *ViperConfig) loadEnvConfig() error {
-	if _, err := os.Stat(v.GetMainPath() + "/../.env.local"); os.IsNotExist(err) {
+	mainConfigFolderPath := v.GetMainPath()
+	if _, err := os.Stat(mainConfigFolderPath + "/../.env.local"); os.IsNotExist(err) {
 		return nil
 	}
 
-	err := godotenv.Load(v.GetMainPath() + "/../.env.local")
+	err := godotenv.Load(mainConfigFolderPath + "/../.env.local")
 	if err != nil {
 		return err
 	}
