@@ -1,7 +1,6 @@
 package app
 
 const ModeLocal = "local"
-const ModeDev = "dev"
 const ModeProd = "prod"
 
 type App struct {
@@ -16,11 +15,6 @@ func (app *App) IsInLocalMode() bool {
 func (app *App) IsInProdMode() bool {
 	return app.IsInMode(ModeProd)
 }
-
-func (app *App) IsInDevMode() bool {
-	return app.IsInMode(ModeDev)
-}
-
 func (app *App) IsInMode(mode string) bool {
 	return app.Mode == mode
 }
