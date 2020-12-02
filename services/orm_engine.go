@@ -3,17 +3,18 @@ package services
 import (
 	"fmt"
 
+	"github.com/sarulabs/di"
 	"github.com/summer-solutions/orm"
-	"github.com/summer-solutions/spring/di"
+	diLocal "github.com/summer-solutions/spring/di"
 )
 
-func OrmEngine() *di.ServiceDefinition {
-	return &di.ServiceDefinition{
+func OrmEngine() *diLocal.ServiceDefinition {
+	return &diLocal.ServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,
-		Build: func() (interface{}, error) {
-			ormConfigService, has := di.OrmConfig()
-			if !has {
+		Build: func(ctn di.Container) (interface{}, error) {
+			ormConfigService, err := ctn.SafeGet("orm_config")
+			if err != nil {
 				return nil, fmt.Errorf("missing orm config service")
 			}
 			ormEngine := ormConfigService.(orm.ValidatedRegistry).CreateEngine()

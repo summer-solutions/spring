@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/summer-solutions/spring/di"
+	"github.com/sarulabs/di"
+	diLocal "github.com/summer-solutions/spring/di"
 
 	"github.com/summer-solutions/spring/services/config"
 
@@ -19,17 +20,17 @@ var ormConfig orm.ValidatedRegistry
 
 type RegistryInitFunc func(registry *orm.Registry)
 
-func OrmRegistry(init RegistryInitFunc) *di.ServiceDefinition {
-	return &di.ServiceDefinition{
+func OrmRegistry(init RegistryInitFunc) *diLocal.ServiceDefinition {
+	return &diLocal.ServiceDefinition{
 		Name:   "orm_config",
 		Global: true,
-		Build: func() (interface{}, error) {
-			configService, has := di.Config()
-			if !has {
+		Build: func(ctn di.Container) (interface{}, error) {
+			configService, err := ctn.SafeGet("config")
+			if err != nil {
 				return nil, fmt.Errorf("missing config service")
 			}
 
-			registry, err := initOrmRegistry(configService)
+			registry, err := initOrmRegistry(configService.(*config.ViperConfig))
 			if err != nil {
 				return nil, err
 			}

@@ -1,16 +1,18 @@
 package services
 
 import (
-	"github.com/summer-solutions/spring/di"
+	"github.com/sarulabs/di"
+	"github.com/summer-solutions/spring/app"
+	diLocal "github.com/summer-solutions/spring/di"
 	"github.com/summer-solutions/spring/services/config"
 )
 
-func Config(configFolderPath string) *di.ServiceDefinition {
-	return &di.ServiceDefinition{
+func Config(configFolderPath string) *diLocal.ServiceDefinition {
+	return &diLocal.ServiceDefinition{
 		Name:   "config",
 		Global: true,
-		Build: func() (interface{}, error) {
-			return config.NewViperConfig(di.App().Name, configFolderPath)
+		Build: func(ctn di.Container) (interface{}, error) {
+			return config.NewViperConfig(ctn.Get("app").(*app.App).Name, configFolderPath)
 		},
 	}
 }

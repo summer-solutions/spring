@@ -27,7 +27,7 @@ func GetContainer() di.Container {
 type ServiceDefinition struct {
 	Name   string
 	Global bool
-	Build  func() (interface{}, error)
+	Build  func(ctn di.Container) (interface{}, error)
 	Close  func(obj interface{}) error
 }
 
