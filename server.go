@@ -58,8 +58,9 @@ func (s *Server) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Serve
 }
 
 func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
-	s.preDeploy()
 	s.initializeIoCHandlers()
+	s.preDeploy()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
