@@ -30,7 +30,7 @@ const ModeLocal = "local"
 const ModeDev = "dev"
 const ModeProd = "prod"
 
-type GinMiddleWareProvider func(ctn di.Container) gin.HandlerFunc
+type GinMiddleWareProvider func() gin.HandlerFunc
 
 type Server struct {
 	mode                  string
@@ -85,7 +85,7 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 
 	r.Use(ginSpring.ContextToContextMiddleware())
 	for _, provider := range s.middlewares {
-		middleware := provider(container)
+		middleware := provider()
 		if middleware != nil {
 			r.Use(middleware)
 		}
