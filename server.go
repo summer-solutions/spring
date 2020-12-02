@@ -29,7 +29,6 @@ import (
 )
 
 const ModeLocal = "local"
-const ModeDev = "dev"
 const ModeProd = "prod"
 
 type GinMiddleWareProvider func() gin.HandlerFunc
@@ -169,12 +168,12 @@ func (s *Server) IsInProdMode() bool {
 	return s.IsInMode(ModeProd)
 }
 
-func (s *Server) IsInDevMode() bool {
-	return s.IsInMode(ModeDev)
-}
-
 func (s *Server) IsInMode(mode string) bool {
 	return s.mode == mode
+}
+
+func (s *Server) GetMode() string {
+	return s.mode
 }
 
 func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
