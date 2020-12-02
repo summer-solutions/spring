@@ -1,16 +1,15 @@
 package services
 
 import (
-	"github.com/sarulabs/di"
-	"github.com/summer-solutions/spring"
+	"github.com/summer-solutions/spring/di"
 	"github.com/summer-solutions/spring/services/config"
 )
 
-func Config(configFilePath string) *spring.DIServiceDefinition {
-	return &spring.DIServiceDefinition{
+func Config(configFilePath string) *di.ServiceDefinition {
+	return &di.ServiceDefinition{
 		Name:   "config",
 		Global: true,
-		Build: func(ctn di.Container) (interface{}, error) {
+		Build: func() (interface{}, error) {
 			return config.NewViperConfig(configFilePath)
 		},
 	}

@@ -9,6 +9,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	diLocal "github.com/summer-solutions/spring/di"
+
 	"github.com/fatih/color"
 	ginSpring "github.com/summer-solutions/spring/gin"
 
@@ -33,9 +35,9 @@ const ModeProd = "prod"
 type GinMiddleWareProvider func() gin.HandlerFunc
 
 type Server struct {
-	mode                  string
-	DIServicesDefinitions []*DIServiceDefinition
-	middlewares           []GinMiddleWareProvider
+	mode                string
+	servicesDefinitions []*diLocal.ServiceDefinition
+	middlewares         []GinMiddleWareProvider
 }
 
 func NewServer() *Server {
@@ -47,8 +49,8 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) RegisterDIService(service ...*DIServiceDefinition) *Server {
-	s.DIServicesDefinitions = append(s.DIServicesDefinitions, service...)
+func (s *Server) RegisterDIService(service ...*diLocal.ServiceDefinition) *Server {
+	s.servicesDefinitions = append(s.servicesDefinitions, service...)
 	return s
 }
 
@@ -70,7 +72,7 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	r := gin.New()
 
 	if s.IsInProdMode() {
-		h, err := GetContainer().SafeGet("log_handler")
+		h, err := diLocal.GetContainer().SafeGet("log_handler")
 		if err == nil {
 			log.SetHandler(h.(log.Handler))
 		} else {
@@ -104,7 +106,7 @@ func (s *Server) preDeploy() {
 		return
 	}
 
-	ormConfigService, has := DIOrmConfig()
+	ormConfigService, has := diLocal.OrmConfig()
 	if !has {
 		return
 	}
@@ -134,7 +136,7 @@ func (s *Server) preDeploy() {
 func (s *Server) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	for _, def := range s.DIServicesDefinitions {
+	for _, def := range s.servicesDefinitions {
 		if def == nil {
 			continue
 		}
@@ -147,14 +149,16 @@ func (s *Server) initializeIoCHandlers() {
 		err := ioCBuilder.Add(di.Def{
 			Name:  def.Name,
 			Scope: scope,
-			Build: def.Build,
+			Build: func(di.Container) (interface{}, error) {
+				return def.Build()
+			},
 			Close: def.Close,
 		})
 		if err != nil {
 			panic(err)
 		}
 	}
-	container = ioCBuilder.Build()
+	diLocal.SetContainer(ioCBuilder.Build())
 }
 
 func (s *Server) IsInLocalMode() bool {
@@ -197,7 +201,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		l, has := DILog()
+		l, has := diLocal.Log()
 		if has {
 			l.Error(errorMessage)
 		} else {

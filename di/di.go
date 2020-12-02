@@ -1,29 +1,31 @@
-package spring
+package di
 
 import (
 	"context"
 
+	"github.com/sarulabs/di"
 	ginLocal "github.com/summer-solutions/spring/gin"
 
-	"github.com/summer-solutions/spring/services/log"
-
+	apexLog "github.com/apex/log"
 	"github.com/summer-solutions/orm"
 	"github.com/summer-solutions/spring/services/config"
-
-	apexLog "github.com/apex/log"
-	"github.com/sarulabs/di"
+	"github.com/summer-solutions/spring/services/log"
 )
 
 var container di.Container
+
+func SetContainer(diContainer di.Container) {
+	container = diContainer
+}
 
 func GetContainer() di.Container {
 	return container
 }
 
-type DIServiceDefinition struct {
+type ServiceDefinition struct {
 	Name   string
 	Global bool
-	Build  func(ctn di.Container) (interface{}, error)
+	Build  func() (interface{}, error)
 	Close  func(obj interface{}) error
 }
 
@@ -45,7 +47,7 @@ func GetContainerForRequest(ctx context.Context) di.Container {
 	return ioCRequestContainer
 }
 
-func DILog() (apexLog.Interface, bool) {
+func Log() (apexLog.Interface, bool) {
 	v, err := GetContainer().SafeGet("log")
 	if err == nil {
 		return v.(apexLog.Interface), true
@@ -53,7 +55,7 @@ func DILog() (apexLog.Interface, bool) {
 	return nil, false
 }
 
-func DIConfig() (*config.ViperConfig, bool) {
+func Config() (*config.ViperConfig, bool) {
 	v, err := GetContainer().SafeGet("config")
 	if err == nil {
 		return v.(*config.ViperConfig), true
@@ -61,7 +63,7 @@ func DIConfig() (*config.ViperConfig, bool) {
 	return nil, false
 }
 
-func DIOrmConfig() (orm.ValidatedRegistry, bool) {
+func OrmConfig() (orm.ValidatedRegistry, bool) {
 	v, err := GetContainer().SafeGet("orm_config")
 	if err == nil {
 		return v.(orm.ValidatedRegistry), true
@@ -69,7 +71,7 @@ func DIOrmConfig() (orm.ValidatedRegistry, bool) {
 	return nil, false
 }
 
-func DILogForContext(ctx context.Context) (*log.RequestLog, bool) {
+func LogForContext(ctx context.Context) (*log.RequestLog, bool) {
 	v, err := GetContainerForRequest(ctx).SafeGet("log_request")
 	if err == nil {
 		return v.(*log.RequestLog), true
@@ -77,7 +79,7 @@ func DILogForContext(ctx context.Context) (*log.RequestLog, bool) {
 	return nil, false
 }
 
-func DIOrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
+func OrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
 	v, err := GetContainerForRequest(ctx).SafeGet("orm_engine")
 	if err == nil {
 		return v.(*orm.Engine), true

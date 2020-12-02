@@ -1,20 +1,20 @@
 package services
 
 import (
-	"github.com/summer-solutions/orm"
-	"github.com/summer-solutions/spring"
+	"fmt"
 
-	"github.com/sarulabs/di"
+	"github.com/summer-solutions/orm"
+	"github.com/summer-solutions/spring/di"
 )
 
-func OrmEngine() *spring.DIServiceDefinition {
-	return &spring.DIServiceDefinition{
+func OrmEngine() *di.ServiceDefinition {
+	return &di.ServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,
-		Build: func(ctn di.Container) (interface{}, error) {
-			ormConfigService, err := ctn.SafeGet("orm_config")
-			if err != nil {
-				return nil, err
+		Build: func() (interface{}, error) {
+			ormConfigService, has := di.OrmConfig()
+			if !has {
+				return nil, fmt.Errorf("missing orm config service")
 			}
 			ormEngine := ormConfigService.(orm.ValidatedRegistry).CreateEngine()
 			return ormEngine, nil

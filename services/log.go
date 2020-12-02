@@ -2,16 +2,15 @@ package services
 
 import (
 	apexLog "github.com/apex/log"
-	"github.com/sarulabs/di"
-	"github.com/summer-solutions/spring"
+	"github.com/summer-solutions/spring/di"
 	"github.com/summer-solutions/spring/services/log"
 )
 
-func LogGlobal(provider ...log.FieldProvider) *spring.DIServiceDefinition {
-	return &spring.DIServiceDefinition{
+func LogGlobal(provider ...log.FieldProvider) *di.ServiceDefinition {
+	return &di.ServiceDefinition{
 		Name:   "log",
 		Global: true,
-		Build: func(ctn di.Container) (interface{}, error) {
+		Build: func() (interface{}, error) {
 			l := apexLog.WithFields(&apexLog.Fields{})
 			for _, fields := range provider {
 				l = l.WithFields(fields())
@@ -21,12 +20,12 @@ func LogGlobal(provider ...log.FieldProvider) *spring.DIServiceDefinition {
 	}
 }
 
-func LogForRequest(provider ...log.RequestFieldProvider) *spring.DIServiceDefinition {
-	return &spring.DIServiceDefinition{
+func LogForRequest(provider ...log.RequestFieldProvider) *di.ServiceDefinition {
+	return &di.ServiceDefinition{
 		Name:   "log_request",
 		Global: false,
-		Build: func(ctn di.Container) (interface{}, error) {
-			l := log.New(ctn, provider...)
+		Build: func() (interface{}, error) {
+			l := log.New(provider...)
 			return l, nil
 		},
 	}

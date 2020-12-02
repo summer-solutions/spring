@@ -1,16 +1,17 @@
 package services
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
-	"github.com/summer-solutions/spring"
+	"github.com/summer-solutions/spring/di"
+
 	"github.com/summer-solutions/spring/services/config"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/sarulabs/di"
 	"github.com/summer-solutions/orm"
 )
 
@@ -18,12 +19,15 @@ var ormConfig orm.ValidatedRegistry
 
 type RegistryInitFunc func(registry *orm.Registry)
 
-func OrmRegistry(init RegistryInitFunc) *spring.DIServiceDefinition {
-	return &spring.DIServiceDefinition{
+func OrmRegistry(init RegistryInitFunc) *di.ServiceDefinition {
+	return &di.ServiceDefinition{
 		Name:   "orm_config",
 		Global: true,
-		Build: func(ctn di.Container) (interface{}, error) {
-			configService := ctn.Get("config").(*config.ViperConfig)
+		Build: func() (interface{}, error) {
+			configService, has := di.Config()
+			if !has {
+				return nil, fmt.Errorf("missing config service")
+			}
 
 			registry, err := initOrmRegistry(configService)
 			if err != nil {
