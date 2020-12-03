@@ -150,9 +150,7 @@ func (s *Server) initializeIoCHandlers() {
 		err := ioCBuilder.Add(di.Def{
 			Name:  def.Name,
 			Scope: scope,
-			Build: func(ctn di.Container) (interface{}, error) {
-				return def.Build(ctn)
-			},
+			Build: def.Build,
 			Close: def.Close,
 		})
 		if err != nil {
