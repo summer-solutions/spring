@@ -57,18 +57,13 @@ func (s *Server) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Serve
 	return s
 }
 
-func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
+func (s *Server) InitGin(server graphql.ExecutableSchema) *gin.Engine {
 	s.initializeIoCHandlers()
-	s.preDeploy()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = fmt.Sprintf("%d", defaultPort)
-	}
 	if s.app.IsInProdMode() {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	r := gin.New()
+	ginEngine := gin.New()
 
 	if s.app.IsInProdMode() {
 		h, has := ioc.GetServiceOptional("log_handler")
@@ -81,20 +76,35 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	} else {
 		log.SetHandler(text.Default)
 		log.SetLevel(log.DebugLevel)
-		r.Use(gin.Logger())
+		ginEngine.Use(gin.Logger())
 	}
 
-	r.Use(ginSpring.ContextToContextMiddleware())
+	ginEngine.Use(ginSpring.ContextToContextMiddleware())
 	for _, provider := range s.middlewares {
 		middleware := provider()
 		if middleware != nil {
-			r.Use(middleware)
+			ginEngine.Use(middleware)
 		}
 	}
 
-	r.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
-	r.GET("/", playgroundHandler())
-	panic(r.Run(":" + port))
+	ginEngine.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
+
+	return ginEngine
+}
+
+func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = fmt.Sprintf("%d", defaultPort)
+	}
+
+	ginEngine := s.InitGin(server)
+
+	s.preDeploy()
+
+	ginEngine.GET("/", playgroundHandler())
+
+	panic(ginEngine.Run(":" + port))
 }
 
 func (s *Server) preDeploy() {
