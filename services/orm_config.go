@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/sarulabs/di"
-	diLocal "github.com/summer-solutions/spring/di"
+	"github.com/summer-solutions/spring/ioc"
 
 	"github.com/summer-solutions/spring/services/config"
 
@@ -19,8 +19,8 @@ var ormConfig orm.ValidatedRegistry
 
 type RegistryInitFunc func(registry *orm.Registry)
 
-func OrmRegistry(init RegistryInitFunc) *diLocal.ServiceDefinition {
-	return &diLocal.ServiceDefinition{
+func OrmRegistry(init RegistryInitFunc) *ioc.ServiceDefinition {
+	return &ioc.ServiceDefinition{
 		Name:   "orm_config",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {

@@ -3,12 +3,12 @@ package services
 import (
 	apexLog "github.com/apex/log"
 	"github.com/sarulabs/di"
-	diLocal "github.com/summer-solutions/spring/di"
+	"github.com/summer-solutions/spring/ioc"
 	"github.com/summer-solutions/spring/services/log"
 )
 
-func LogGlobal(provider ...log.FieldProvider) *diLocal.ServiceDefinition {
-	return &diLocal.ServiceDefinition{
+func LogGlobal(provider ...log.FieldProvider) *ioc.ServiceDefinition {
+	return &ioc.ServiceDefinition{
 		Name:   "log",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
@@ -21,8 +21,8 @@ func LogGlobal(provider ...log.FieldProvider) *diLocal.ServiceDefinition {
 	}
 }
 
-func LogForRequest(provider ...log.RequestFieldProvider) *diLocal.ServiceDefinition {
-	return &diLocal.ServiceDefinition{
+func LogForRequest(provider ...log.RequestFieldProvider) *ioc.ServiceDefinition {
+	return &ioc.ServiceDefinition{
 		Name:   "log_request",
 		Global: false,
 		Build: func(ctn di.Container) (interface{}, error) {

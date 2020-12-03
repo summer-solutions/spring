@@ -11,7 +11,7 @@ import (
 
 	"github.com/summer-solutions/spring/app"
 
-	diLocal "github.com/summer-solutions/spring/di"
+	"github.com/summer-solutions/spring/ioc"
 
 	"github.com/fatih/color"
 	ginSpring "github.com/summer-solutions/spring/gin"
@@ -34,7 +34,7 @@ type GinMiddleWareProvider func() gin.HandlerFunc
 
 type Server struct {
 	app                 *app.App
-	servicesDefinitions []*diLocal.ServiceDefinition
+	servicesDefinitions []*ioc.ServiceDefinition
 	middlewares         []GinMiddleWareProvider
 }
 
@@ -47,7 +47,7 @@ func NewServer(appName string) *Server {
 	return s
 }
 
-func (s *Server) RegisterDIService(service ...*diLocal.ServiceDefinition) *Server {
+func (s *Server) RegisterDIService(service ...*ioc.ServiceDefinition) *Server {
 	s.servicesDefinitions = append(s.servicesDefinitions, service...)
 	return s
 }
@@ -71,8 +71,8 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	r := gin.New()
 
 	if s.app.IsInProdMode() {
-		h, err := diLocal.GetContainer().SafeGet("log_handler")
-		if err == nil {
+		h, has := ioc.GetServiceOptional("log_handler")
+		if !has {
 			log.SetHandler(h.(log.Handler))
 		} else {
 			log.SetHandler(json.Default)
@@ -105,7 +105,7 @@ func (s *Server) preDeploy() {
 		return
 	}
 
-	ormConfigService, has := diLocal.OrmConfig()
+	ormConfigService, has := ioc.OrmConfig()
 	if !has {
 		return
 	}
@@ -169,7 +169,7 @@ func (s *Server) initializeIoCHandlers() {
 	if err != nil {
 		panic(err)
 	}
-	diLocal.SetContainer(ioCBuilder.Build())
+	ioc.SetContainer(ioCBuilder.Build())
 }
 
 func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
@@ -196,7 +196,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		l, has := diLocal.Log()
+		l, has := ioc.Log()
 		if has {
 			l.Error(errorMessage)
 		} else {

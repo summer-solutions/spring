@@ -5,11 +5,11 @@ import (
 
 	"github.com/sarulabs/di"
 	"github.com/summer-solutions/orm"
-	diLocal "github.com/summer-solutions/spring/di"
+	"github.com/summer-solutions/spring/ioc"
 )
 
-func OrmEngine() *diLocal.ServiceDefinition {
-	return &diLocal.ServiceDefinition{
+func OrmEngine() *ioc.ServiceDefinition {
+	return &ioc.ServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,
 		Build: func(ctn di.Container) (interface{}, error) {
