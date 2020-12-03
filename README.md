@@ -4,8 +4,8 @@
 
 ### Main features:
 
- * Build on top of [Gqlgen](https://gqlgen.com/]) and [Gin Framework](https://github.com/gin-gonic/gin])
- * Easy to integrate with [Spring ORM](https://github.com/summer-solutions/orm])
+ * Build on top of [Gqlgen](https://gqlgen.com/]) and [Gin Framework](https://github.com/gin-gonic/gin)
+ * Easy to integrate with [Spring ORM](https://github.com/summer-solutions/orm)
  * Follows [Dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) pattern
  
  
