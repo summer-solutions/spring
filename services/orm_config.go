@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -27,7 +26,7 @@ func OrmRegistry(init RegistryInitFunc) *diLocal.ServiceDefinition {
 		Build: func(ctn di.Container) (interface{}, error) {
 			configService, err := ctn.SafeGet("config")
 			if err != nil {
-				return nil, fmt.Errorf("missing config service")
+				return nil, err
 			}
 
 			registry, err := initOrmRegistry(configService.(*config.ViperConfig))
