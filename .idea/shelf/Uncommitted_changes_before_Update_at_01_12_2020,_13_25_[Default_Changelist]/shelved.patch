@@ -1,0 +1,133 @@
+Index: service/registry/global/log.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package global\n\nimport (\n\t\"github.com/apex/log\"\n\t\"github.com/sarulabs/di\"\n\t\"github.com/summer-solutions/spring\"\n)\n\nvar LogGlobalService spring.InitHandler = func(s *spring.Server, def *spring.Def) {\n\tdef.Name = \"log\"\n\tdef.Build = func(ctn di.Container) (interface{}, error) {\n\t\treturn log.WithFields(&log.Fields{}), nil\n\t}\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- service/registry/global/log.go	(revision e031f62a20862357715c774a8a75094a7c16ac81)
++++ service/registry/global/log.go	(date 1606767760363)
+@@ -6,9 +6,17 @@
+ 	"github.com/summer-solutions/spring"
+ )
+ 
+-var LogGlobalService spring.InitHandler = func(s *spring.Server, def *spring.Def) {
+-	def.Name = "log"
+-	def.Build = func(ctn di.Container) (interface{}, error) {
+-		return log.WithFields(&log.Fields{}), nil
++type LogFieldProvider func() log.Fielder
++
++func LogGlobalService(provider ...LogFieldProvider) spring.InitHandler {
++	return func(s *spring.Server, def *spring.Def) {
++		def.Name = "log"
++		def.Build = func(ctn di.Container) (interface{}, error) {
++			l := log.WithFields(&log.Fields{})
++			for _, fields := range provider {
++				l = l.WithFields(fields())
++			}
++			return l, nil
++		}
+ 	}
+ }
+Index: service/log/provider/google.go
+===================================================================
+--- service/log/provider/google.go	(revision e031f62a20862357715c774a8a75094a7c16ac81)
++++ service/log/provider/google.go	(revision e031f62a20862357715c774a8a75094a7c16ac81)
+@@ -1,23 +0,0 @@
+-package provider
+-
+-import (
+-	"context"
+-	"fmt"
+-	"os"
+-	"strings"
+-
+-	"github.com/summer-solutions/spring/gin"
+-
+-	"github.com/apex/log"
+-)
+-
+-func Google(ctx context.Context) log.Interface {
+-	var trace string
+-	g := gin.FromContext(ctx)
+-	traceHeader := g.Request.Header.Get("X-Cloud-Trace-Context")
+-	traceParts := strings.Split(traceHeader, "/")
+-	if len(traceParts) > 0 && len(traceParts[0]) > 0 {
+-		trace = fmt.Sprintf("projects/%s/traces/%s", os.Getenv("GC_PROJECT_ID"), traceParts[0])
+-	}
+-	return log.WithField("logging.googleapis.com/trace", trace)
+-}
+Index: go.mod
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>module github.com/summer-solutions/spring\n\ngo 1.15\n\nrequire (\n\tgithub.com/99designs/gqlgen v0.13.0\n\tgithub.com/agnivade/levenshtein v1.1.0 // indirect\n\tgithub.com/apex/log v1.9.0\n\tgithub.com/fatih/color v1.7.0\n\tgithub.com/gin-contrib/timeout v0.0.1\n\tgithub.com/gin-gonic/gin v1.6.3\n\tgithub.com/go-playground/validator/v10 v10.4.1 // indirect\n\tgithub.com/golang/protobuf v1.4.3 // indirect\n\tgithub.com/hashicorp/golang-lru v0.5.4 // indirect\n\tgithub.com/joho/godotenv v1.3.0\n\tgithub.com/juju/testing v0.0.0-20201030020617-7189b3728523 // indirect\n\tgithub.com/magiconair/properties v1.8.4 // indirect\n\tgithub.com/mitchellh/mapstructure v1.4.0 // indirect\n\tgithub.com/pelletier/go-toml v1.8.1 // indirect\n\tgithub.com/sarulabs/di v2.0.0+incompatible\n\tgithub.com/spf13/afero v1.4.1 // indirect\n\tgithub.com/spf13/cast v1.3.1 // indirect\n\tgithub.com/spf13/jwalterweatherman v1.1.0 // indirect\n\tgithub.com/spf13/pflag v1.0.5 // indirect\n\tgithub.com/spf13/viper v1.7.1\n\tgithub.com/stretchr/testify v1.6.1\n\tgithub.com/summer-solutions/orm v1.53.2\n\tgithub.com/ugorji/go v1.2.0 // indirect\n\tgolang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect\n\tgolang.org/x/sys v0.0.0-20201130072748-111129e158e2 // indirect\n\tgolang.org/x/text v0.3.4 // indirect\n\tgolang.org/x/tools v0.0.0-20201130175650-e7a545864330 // indirect\n\tgoogle.golang.org/protobuf v1.25.0 // indirect\n\tgopkg.in/ini.v1 v1.62.0 // indirect\n\tgopkg.in/yaml.v2 v2.4.0\n)\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- go.mod	(revision e031f62a20862357715c774a8a75094a7c16ac81)
++++ go.mod	(date 1606767444263)
+@@ -29,7 +29,7 @@
+ 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
+ 	golang.org/x/sys v0.0.0-20201130072748-111129e158e2 // indirect
+ 	golang.org/x/text v0.3.4 // indirect
+-	golang.org/x/tools v0.0.0-20201130175650-e7a545864330 // indirect
++	golang.org/x/tools v0.0.0-20201130200459-ca1c149215bb // indirect
+ 	google.golang.org/protobuf v1.25.0 // indirect
+ 	gopkg.in/ini.v1 v1.62.0 // indirect
+ 	gopkg.in/yaml.v2 v2.4.0
+Index: service/registry/request/log.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- service/registry/request/log.go	(date 1606767856361)
++++ service/registry/request/log.go	(date 1606767856361)
+@@ -0,0 +1,21 @@
++package request
++
++import (
++	"github.com/apex/log"
++	"github.com/sarulabs/di"
++	"github.com/summer-solutions/spring"
++	"github.com/summer-solutions/spring/service"
++)
++
++type LogRequestFieldProvider func() log.Fielder
++
++func LogGlobalService(provider ...LogRequestFieldProvider) spring.InitHandler {
++	return func(s *spring.Server, def *spring.Def) {
++		def.Name = "log_request"
++		def.Build = func(ctn di.Container) (interface{}, error) {
++			l := service.Log()
++			TODO add Error with ctx
++			return l, nil
++		}
++	}
++}
+Index: gin/middleware/gc_log.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- gin/middleware/gc_log.go	(date 1606767445706)
++++ gin/middleware/gc_log.go	(date 1606767445706)
+@@ -0,0 +1,19 @@
++package middleware
++
++import (
++	"strings"
++
++	"github.com/gin-gonic/gin"
++)
++
++func GCLog(engine *gin.Engine) error {
++	engine.Use(func(c *gin.Context) {
++		traceHeader := c.Request.Header.Get("X-Cloud-Trace-Context")
++		traceParts := strings.Split(traceHeader, "/")
++		if len(traceParts) > 0 && len(traceParts[0]) > 0 {
++			//trace := fmt.Sprintf("projects/%s/traces/%s", os.Getenv("GC_PROJECT_ID"), traceParts[0])
++			//service.Log().AddField("logging.googleapis.com/trace", trace)
++		}
++	})
++	return nil
++}
