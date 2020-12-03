@@ -1,16 +1,10 @@
 package services
 
 import (
-	"io/ioutil"
-	"os"
-	"strings"
-
 	"github.com/sarulabs/di"
 	"github.com/summer-solutions/spring/ioc"
 
 	"github.com/summer-solutions/spring/services/config"
-
-	"gopkg.in/yaml.v2"
 
 	"github.com/summer-solutions/orm"
 )
@@ -28,70 +22,10 @@ func OrmRegistry(init RegistryInitFunc) *ioc.ServiceDefinition {
 			if err != nil {
 				return nil, err
 			}
-
-			registry, err := initOrmRegistry(configService.(*config.ViperConfig))
-			if err != nil {
-				return nil, err
-			}
-
+			registry := orm.InitByYaml(configService.(*config.ViperConfig).Get("orm").(map[string]interface{}))
 			init(registry)
-
 			ormConfig, err = registry.Validate()
-
 			return ormConfig, err
 		},
-	}
-}
-
-func initOrmRegistry(configService *config.ViperConfig) (*orm.Registry, error) {
-	var yamlFileData []byte
-	var err error
-
-	if os.Getenv("ORM_CONFIG_FILE") != "" {
-		yamlFileData, err = ioutil.ReadFile(os.Getenv("ORM_CONFIG_FILE"))
-	} else {
-		yamlFileData, err = ioutil.ReadFile(configService.GetMainPath() + "/orm/config.yaml")
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	var parsedYaml map[string]interface{}
-
-	err = yaml.Unmarshal(yamlFileData, &parsedYaml)
-	if err != nil {
-		return nil, err
-	}
-
-	data := make(map[string]interface{})
-
-	conf := parsedYaml["orm"].(map[interface{}]interface{})
-	loadEnvConfig(conf)
-
-	for k, v := range conf {
-		data[k.(string)] = v
-	}
-
-	return orm.InitByYaml(data), nil
-}
-
-func loadEnvConfig(configData map[interface{}]interface{}) {
-	for k, v := range configData {
-		_, isString := v.(string)
-		_, isInt := v.(int)
-
-		if !isString && !isInt {
-			loadEnvConfig(v.(map[interface{}]interface{}))
-		} else if isString {
-			if strings.HasPrefix(v.(string), "ENV[") {
-				envKey := strings.TrimLeft(strings.TrimRight(v.(string), "]"), "ENV[")
-				envVal := os.Getenv(envKey)
-				if envVal == "" {
-					panic("missing value for ENV variable " + v.(string))
-				}
-				configData[k] = envVal
-			}
-		}
 	}
 }
