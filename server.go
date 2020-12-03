@@ -111,7 +111,7 @@ func (s *Server) preDeploy() {
 	preDeployFlag := flag.Bool("pre-deploy", false, "Execute pre deploy mode")
 	flag.Parse()
 
-	if !*preDeployFlag && !s.app.IsInLocalMode() {
+	if !*preDeployFlag {
 		return
 	}
 
