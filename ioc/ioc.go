@@ -46,15 +46,15 @@ func GetServiceRequired(key string) interface{} {
 }
 
 func GetServiceForRequestSafe(ctx context.Context, key string) (service interface{}, has bool, err error) {
-	return getServiceSafe(getContainerForRequest(ctx), key)
+	return getServiceSafe(getContainerFromRequest(ctx), key)
 }
 
 func GetServiceForRequestOptional(ctx context.Context, key string) (service interface{}, has bool) {
-	return getServiceOptional(getContainerForRequest(ctx), key)
+	return getServiceOptional(getContainerFromRequest(ctx), key)
 }
 
 func GetServiceForRequestRequired(ctx context.Context, key string) interface{} {
-	return getServiceRequired(getContainerForRequest(ctx), key)
+	return getServiceRequired(getContainerFromRequest(ctx), key)
 }
 
 func App() *app.App {
@@ -131,11 +131,13 @@ func getServiceRequired(ctn di.Container, key string) interface{} {
 	return service
 }
 
-func getContainerForRequest(ctx context.Context) (ctn di.Container) {
+func getContainerFromRequest(ctx context.Context) (ctn di.Container) {
 	c := ginLocal.FromContext(ctx)
 	requestContainer, has := c.Get("RequestContainer")
+
 	if !has {
-		ctn, err := container.SubContainer()
+		var err error
+		ctn, err = container.SubContainer()
 		if err != nil {
 			panic(err)
 		}
