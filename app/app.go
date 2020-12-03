@@ -18,7 +18,3 @@ func (app *App) IsInProdMode() bool {
 func (app *App) IsInMode(mode string) bool {
 	return app.Mode == mode
 }
-
-func (app *App) AppName(mode string) bool {
-	return app.Mode == mode
-}
