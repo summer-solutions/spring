@@ -12,7 +12,7 @@ func LogGlobal(provider ...log.FieldProvider) *ioc.ServiceDefinition {
 		Name:   "log",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
-			l := apexLog.WithFields(&apexLog.Fields{})
+			l := apexLog.WithFields(&apexLog.Fields{"app": ioc.App().Name})
 			for _, fields := range provider {
 				l = l.WithFields(fields())
 			}

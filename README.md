@@ -19,22 +19,23 @@ func main() {
 	
     graphQLExecutableSchema := ... // setup graphql.ExecutableSchema 
     // run http server
-    spring.NewServer("app_name").Run(8080, graphQLExecutableSchema)
+    spring.New("app_name").Run(8080, graphQLExecutableSchema)
 }
 
 ``` 
 
 #### Setting server port
+
 By default, spring server is using port defined in environment variable "**PORT**". If this variable is not
 set spring will use port number passed as fist argument.
 
 #### Application name
 
-When you setup server using **NewServer** method yo must provide unique application name that can be
+When you setup server using **New** method yo must provide unique application name that can be
 checked in code like this:
 
 ```go
-    s := spring.NewServer("app_name").Run(...)
+    s := spring.New("app_name").Run(...)
     ioc.App().Name
 ```
 
@@ -42,7 +43,7 @@ checked in code like this:
 
 By default, spring is running in "**spring.ModeLocal**" mode. Mode is a string that is available in: 
 ```go
-    s := spring.NewServer("app_name").Run(...)
+    s := spring.New("app_name").Run(...)
     
     // now you can access current spring mode
     ioc.App().Mode
@@ -70,7 +71,7 @@ follows **spring.ModeProd** rules explained above.
 In code you can easly check current mode using one of these methods:    
 
 ```go
-    s := spring.NewServer(...)
+    s := spring.New(...)
     ioc.App().IsInLocalMode()
     ioc.App().IsInProdMode()
     ioc.App().IsInMode("my_mode")
@@ -85,7 +86,7 @@ package main
 import "github.com/summer-solutions/spring"
 
 func main() {
-    server := spring.NewServer("my_app").RegisterDIService(
+    server := spring.New("my_app").RegisterDIService(
       // put service definitions here
     )
     server.Run(...)
@@ -112,7 +113,7 @@ func main() {
     }
     
     // register it and run server
-    server := spring.NewServer("my_app").RegisterDIService(
+    server := spring.New("my_app").RegisterDIService(
       myService,
     )
     server.Run(...)

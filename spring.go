@@ -32,73 +32,39 @@ import (
 
 type GinMiddleWareProvider func() gin.HandlerFunc
 
-type Server struct {
+type Spring struct {
 	app                 *app.App
 	servicesDefinitions []*ioc.ServiceDefinition
 	middlewares         []GinMiddleWareProvider
 }
 
-func NewServer(appName string) *Server {
+func New(appName string) *Spring {
 	mode, hasMode := os.LookupEnv("SPRING_MODE")
 	if !hasMode {
 		mode = app.ModeLocal
 	}
-	s := &Server{app: &app.App{Mode: mode, Name: appName}}
+	s := &Spring{app: &app.App{Mode: mode, Name: appName}}
 	return s
 }
 
-func (s *Server) RegisterDIService(service ...*ioc.ServiceDefinition) *Server {
+func (s *Spring) RegisterDIService(service ...*ioc.ServiceDefinition) *Spring {
 	s.servicesDefinitions = append(s.servicesDefinitions, service...)
 	return s
 }
 
-func (s *Server) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Server {
+func (s *Spring) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Spring {
 	s.middlewares = append(s.middlewares, provider...)
 	return s
 }
 
-func (s *Server) InitGin(server graphql.ExecutableSchema) *gin.Engine {
-	s.initializeIoCHandlers()
-
-	if s.app.IsInProdMode() {
-		gin.SetMode(gin.ReleaseMode)
-	}
-	ginEngine := gin.New()
-
-	if s.app.IsInProdMode() {
-		h, has := ioc.GetServiceOptional("log_handler")
-		if !has {
-			log.SetHandler(h.(log.Handler))
-		} else {
-			log.SetHandler(json.Default)
-		}
-		log.SetLevel(log.WarnLevel)
-	} else {
-		log.SetHandler(text.Default)
-		log.SetLevel(log.DebugLevel)
-		ginEngine.Use(gin.Logger())
-	}
-
-	ginEngine.Use(ginSpring.ContextToContextMiddleware())
-	for _, provider := range s.middlewares {
-		middleware := provider()
-		if middleware != nil {
-			ginEngine.Use(middleware)
-		}
-	}
-
-	ginEngine.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
-
-	return ginEngine
-}
-
-func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
+func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema) {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
 
-	ginEngine := s.InitGin(server)
+	s.initializeIoCHandlers()
+	ginEngine := s.initGin(server)
 
 	s.preDeploy()
 
@@ -107,7 +73,7 @@ func (s *Server) Run(defaultPort uint, server graphql.ExecutableSchema) {
 	panic(ginEngine.Run(":" + port))
 }
 
-func (s *Server) preDeploy() {
+func (s *Spring) preDeploy() {
 	preDeployFlag := flag.Bool("pre-deploy", false, "Execute pre deploy mode")
 	flag.Parse()
 
@@ -142,7 +108,7 @@ func (s *Server) preDeploy() {
 	}
 }
 
-func (s *Server) initializeIoCHandlers() {
+func (s *Spring) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
 	for _, def := range s.servicesDefinitions {
@@ -217,6 +183,39 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
 	}
+}
+
+func (s *Spring) initGin(server graphql.ExecutableSchema) *gin.Engine {
+	if s.app.IsInProdMode() {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	ginEngine := gin.New()
+
+	if s.app.IsInProdMode() {
+		h, has := ioc.GetServiceOptional("log_handler")
+		if !has {
+			log.SetHandler(h.(log.Handler))
+		} else {
+			log.SetHandler(json.Default)
+		}
+		log.SetLevel(log.WarnLevel)
+	} else {
+		log.SetHandler(text.Default)
+		log.SetLevel(log.DebugLevel)
+		ginEngine.Use(gin.Logger())
+	}
+
+	ginEngine.Use(ginSpring.ContextToContextMiddleware())
+	for _, provider := range s.middlewares {
+		middleware := provider()
+		if middleware != nil {
+			ginEngine.Use(middleware)
+		}
+	}
+
+	ginEngine.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
+
+	return ginEngine
 }
 
 func playgroundHandler() gin.HandlerFunc {
