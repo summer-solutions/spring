@@ -1,5 +1,5 @@
 ![Check & test](https://github.com/summer-solutions/spring/workflows/Check%20&%20test/badge.svg)
-[![codecov](https://codecov.io/gh/summer-solutions/springspring/branch/master/graph/badge.svg)](https://codecov.io/gh/summer-solutions/orm)
+[![codecov](https://codecov.io/gh/summer-solutions/spring/branch/main/graph/badge.svg)](https://codecov.io/gh/summer-solutions/spring)
 [![Go Report Card](https://goreportcard.com/badge/github.com/summer-solutions/spring)](https://goreportcard.com/report/github.com/summer-solutions/spring)
 [![MIT license](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 
