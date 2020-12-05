@@ -3,8 +3,6 @@ package spring
 import (
 	"runtime/debug"
 	"time"
-
-	"github.com/summer-solutions/spring/ioc"
 )
 
 type Script interface {
@@ -50,7 +48,7 @@ func (s *Spring) runScript(script Script) bool {
 				} else {
 					message = "panic"
 				}
-				ioc.Log().Error(message + "\n" + string(debug.Stack()))
+				Log().Error(message + "\n" + string(debug.Stack()))
 				valid = false
 			}
 		}()

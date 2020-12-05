@@ -2,21 +2,30 @@ package spring
 
 import (
 	apexLog "github.com/apex/log"
+	"github.com/gin-gonic/gin"
 	"github.com/sarulabs/di"
-	"github.com/summer-solutions/spring/ioc"
-	"github.com/summer-solutions/spring/services/log"
+	"github.com/summer-solutions/spring/app"
 )
 
-func logGlobal() *ioc.ServiceDefinition {
-	return &ioc.ServiceDefinition{
+type LogRequestFieldProvider func(ctx *gin.Context) apexLog.Fielder
+type LogFieldProvider func() apexLog.Fielder
+
+type RequestLog struct {
+	providers []LogRequestFieldProvider
+	entry     apexLog.Interface
+	container di.Container
+}
+
+func serviceLogGlobal() *ServiceDefinition {
+	return &ServiceDefinition{
 		Name:   "log",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
-			l := apexLog.WithFields(&apexLog.Fields{"app": ioc.App().Name})
+			l := apexLog.WithFields(&apexLog.Fields{"app": App().Name})
 			key := "_log_providers"
 			_, has := ctn.Definitions()[key]
 			if has {
-				providers := ctn.Get(key).([]log.FieldProvider)
+				providers := ctn.Get(key).([]LogFieldProvider)
 				for _, fields := range providers {
 					l = l.WithFields(fields())
 				}
@@ -26,21 +35,36 @@ func logGlobal() *ioc.ServiceDefinition {
 	}
 }
 
-func logForRequest() *ioc.ServiceDefinition {
-	return &ioc.ServiceDefinition{
+func serviceLogForRequest() *ServiceDefinition {
+	return &ServiceDefinition{
 		Name:   "log_request",
 		Global: false,
 		Build: func(ctn di.Container) (interface{}, error) {
 			key := "_log_request_providers"
 			_, has := ctn.Definitions()[key]
-			var l *log.RequestLog
+			var l *RequestLog
 			if has {
-				providers := ctn.Get(key).([]log.RequestFieldProvider)
-				l = log.New(providers...)
+				providers := ctn.Get(key).([]LogRequestFieldProvider)
+				l = &RequestLog{providers: providers}
 			} else {
-				l = log.New()
+				l = &RequestLog{}
 			}
 			return l, nil
 		},
 	}
+}
+
+func (l *RequestLog) Log(ctx *gin.Context) apexLog.Interface {
+	if l.entry == nil {
+		appName := l.container.Get("app").(*app.App).Name
+		entry := apexLog.WithFields(&apexLog.Fields{"app": appName})
+		for _, p := range l.providers {
+			fields := p(ctx)
+			if fields != nil {
+				entry = entry.WithFields(fields)
+			}
+		}
+		l.entry = entry
+	}
+	return l.entry
 }

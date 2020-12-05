@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/sarulabs/di"
-	"github.com/summer-solutions/spring/ioc"
 	"github.com/tj/assert"
 )
 
@@ -23,7 +22,7 @@ func (script *testScript) Unique() bool {
 
 func TestRunScript(t *testing.T) {
 	s := New("test_script").RegisterDIService()
-	testService := &ioc.ServiceDefinition{
+	testService := &ServiceDefinition{
 		Name:   "test_service",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
@@ -35,6 +34,6 @@ func TestRunScript(t *testing.T) {
 	testScript := &testScript{}
 	s.RunScript(testScript)
 	assert.Equal(t, 1, testScript.RunCounter)
-	assert.Equal(t, "test_script", ioc.App().Name)
-	assert.Equal(t, "hello", ioc.GetServiceRequired("test_service"))
+	assert.Equal(t, "test_script", App().Name)
+	assert.Equal(t, "hello", GetServiceRequired("test_service"))
 }

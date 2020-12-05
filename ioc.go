@@ -1,4 +1,4 @@
-package ioc
+package spring
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	apexLog "github.com/apex/log"
 	"github.com/summer-solutions/orm"
 	"github.com/summer-solutions/spring/services/config"
-	"github.com/summer-solutions/spring/services/log"
 )
 
 var container di.Container
@@ -22,10 +21,6 @@ type ServiceDefinition struct {
 	Global bool
 	Build  func(ctn di.Container) (interface{}, error)
 	Close  func(obj interface{}) error
-}
-
-func SetContainer(diContainer di.Container) {
-	container = diContainer
 }
 
 func HasService(key string) bool {
@@ -81,8 +76,8 @@ func OrmConfig() (orm.ValidatedRegistry, bool) {
 	return nil, false
 }
 
-func LogForContext(ctx context.Context) *log.RequestLog {
-	return GetServiceForRequestRequired(ctx, "log_request").(*log.RequestLog)
+func LogForContext(ctx context.Context) *RequestLog {
+	return GetServiceForRequestRequired(ctx, "log_request").(*RequestLog)
 }
 
 func OrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
@@ -138,4 +133,8 @@ func getContainerFromRequest(ctx context.Context) (ctn di.Container) {
 		ctn = requestContainer.(di.Container)
 	}
 	return ctn
+}
+
+func setContainer(diContainer di.Container) {
+	container = diContainer
 }

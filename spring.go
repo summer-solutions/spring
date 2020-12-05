@@ -11,8 +11,6 @@ import (
 
 	"github.com/summer-solutions/spring/app"
 
-	"github.com/summer-solutions/spring/ioc"
-
 	"github.com/fatih/color"
 	ginSpring "github.com/summer-solutions/spring/gin"
 
@@ -34,7 +32,7 @@ type GinMiddleWareProvider func() gin.HandlerFunc
 
 type Spring struct {
 	app                 *app.App
-	servicesDefinitions []*ioc.ServiceDefinition
+	servicesDefinitions []*ServiceDefinition
 	middlewares         []GinMiddleWareProvider
 }
 
@@ -47,7 +45,7 @@ func New(appName string) *Spring {
 	return s
 }
 
-func (s *Spring) RegisterDIService(service ...*ioc.ServiceDefinition) *Spring {
+func (s *Spring) RegisterDIService(service ...*ServiceDefinition) *Spring {
 	s.servicesDefinitions = append(s.servicesDefinitions, service...)
 	return s
 }
@@ -81,7 +79,7 @@ func (s *Spring) preDeploy() {
 		return
 	}
 
-	ormConfigService, has := ioc.OrmConfig()
+	ormConfigService, has := OrmConfig()
 	if !has {
 		return
 	}
@@ -111,7 +109,7 @@ func (s *Spring) preDeploy() {
 func (s *Spring) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	defaultDefinitions := []*ioc.ServiceDefinition{logGlobal(), logForRequest()}
+	defaultDefinitions := []*ServiceDefinition{serviceLogGlobal(), serviceLogForRequest()}
 
 	for _, def := range append(defaultDefinitions, s.servicesDefinitions...) {
 		if def == nil {
@@ -147,7 +145,7 @@ func (s *Spring) initializeIoCHandlers() {
 	if err != nil {
 		panic(err)
 	}
-	ioc.SetContainer(ioCBuilder.Build())
+	setContainer(ioCBuilder.Build())
 }
 
 func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
@@ -174,7 +172,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		ioc.Log().Error(errorMessage)
+		Log().Error(errorMessage)
 		return errors.New("internal server error")
 	})
 	return func(c *gin.Context) {
@@ -189,7 +187,7 @@ func (s *Spring) initGin(server graphql.ExecutableSchema) *gin.Engine {
 	ginEngine := gin.New()
 
 	if s.app.IsInProdMode() {
-		h, has := ioc.GetServiceOptional("log_handler")
+		h, has := GetServiceOptional("log_handler")
 		if !has {
 			log.SetHandler(h.(log.Handler))
 		} else {

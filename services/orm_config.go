@@ -2,7 +2,7 @@ package services
 
 import (
 	"github.com/sarulabs/di"
-	"github.com/summer-solutions/spring/ioc"
+	"github.com/summer-solutions/spring"
 
 	"github.com/summer-solutions/spring/services/config"
 
@@ -13,8 +13,8 @@ var ormConfig orm.ValidatedRegistry
 
 type RegistryInitFunc func(registry *orm.Registry)
 
-func OrmRegistry(init RegistryInitFunc) *ioc.ServiceDefinition {
-	return &ioc.ServiceDefinition{
+func OrmRegistry(init RegistryInitFunc) *spring.ServiceDefinition {
+	return &spring.ServiceDefinition{
 		Name:   "orm_config",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
