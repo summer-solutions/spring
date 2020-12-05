@@ -7,8 +7,6 @@ import (
 	"github.com/summer-solutions/orm"
 )
 
-var ormConfig orm.ValidatedRegistry
-
 type RegistryInitFunc func(registry *orm.Registry)
 
 func OrmRegistry(init RegistryInitFunc) *spring.ServiceDefinition {
@@ -22,7 +20,7 @@ func OrmRegistry(init RegistryInitFunc) *spring.ServiceDefinition {
 			}
 			registry := orm.InitByYaml(configService.(*spring.ViperConfig).Get("orm").(map[string]interface{}))
 			init(registry)
-			ormConfig, err = registry.Validate()
+			ormConfig, err := registry.Validate()
 			return ormConfig, err
 		},
 	}

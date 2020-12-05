@@ -1,16 +1,14 @@
-package services
+package spring
 
 import (
 	"fmt"
-
-	"github.com/summer-solutions/spring"
 
 	"github.com/sarulabs/di"
 	"github.com/summer-solutions/orm"
 )
 
-func OrmEngine() *spring.ServiceDefinition {
-	return &spring.ServiceDefinition{
+func OrmEngine() *ServiceDefinition {
+	return &ServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,
 		Build: func(ctn di.Container) (interface{}, error) {
