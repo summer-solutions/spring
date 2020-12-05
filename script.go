@@ -4,7 +4,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/summer-solutions/spring/ioc"
 )
 
@@ -51,13 +50,7 @@ func (s *Spring) runScript(script Script) bool {
 				} else {
 					message = "panic"
 				}
-				errorMessage := message + "\n" + string(debug.Stack())
-				l, has := ioc.Log()
-				if has {
-					l.Error(errorMessage)
-				} else {
-					log.Error(errorMessage)
-				}
+				ioc.Log().Error(message + "\n" + string(debug.Stack()))
 				valid = false
 			}
 		}()

@@ -61,12 +61,8 @@ func App() *app.App {
 	return GetServiceRequired("app").(*app.App)
 }
 
-func Log() (apexLog.Interface, bool) {
-	v, has := GetServiceOptional("log")
-	if has {
-		return v.(apexLog.Interface), true
-	}
-	return nil, false
+func Log() apexLog.Interface {
+	return GetServiceRequired("log").(apexLog.Interface)
 }
 
 func Config() (*config.ViperConfig, bool) {
@@ -85,12 +81,8 @@ func OrmConfig() (orm.ValidatedRegistry, bool) {
 	return nil, false
 }
 
-func LogForContext(ctx context.Context) (*log.RequestLog, bool) {
-	v, has := GetServiceForRequestOptional(ctx, "log_request")
-	if has {
-		return v.(*log.RequestLog), true
-	}
-	return nil, false
+func LogForContext(ctx context.Context) *log.RequestLog {
+	return GetServiceForRequestRequired(ctx, "log_request").(*log.RequestLog)
 }
 
 func OrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {

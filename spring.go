@@ -111,7 +111,9 @@ func (s *Spring) preDeploy() {
 func (s *Spring) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	for _, def := range s.servicesDefinitions {
+	defaultDefinitions := []*ioc.ServiceDefinition{logGlobal(), logForRequest()}
+
+	for _, def := range append(defaultDefinitions, s.servicesDefinitions...) {
 		if def == nil {
 			continue
 		}
@@ -172,12 +174,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		l, has := ioc.Log()
-		if has {
-			l.Error(errorMessage)
-		} else {
-			log.Error(errorMessage)
-		}
+		ioc.Log().Error(errorMessage)
 		return errors.New("internal server error")
 	})
 	return func(c *gin.Context) {
