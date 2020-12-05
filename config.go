@@ -1,4 +1,4 @@
-package config
+package spring
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/sarulabs/di"
 	"github.com/spf13/viper"
 )
 
@@ -16,7 +17,7 @@ type ViperConfig struct {
 	*viper.Viper
 }
 
-func NewViperConfig(appName, localConfigFolder string) (*ViperConfig, error) {
+func newViperConfig(appName, localConfigFolder string) (*ViperConfig, error) {
 	viper.SetConfigName(configName)
 
 	configFolder, hasConfigFolder := os.LookupEnv("SPRING_CONFIG_FOLDER")
@@ -92,4 +93,25 @@ func (v *ViperConfig) GetMainPath() string {
 	}
 
 	return path
+}
+
+func ServiceConfigDirectory(configDirectory string) *ServiceDefinition {
+	return &ServiceDefinition{
+		Name:   "config_directory",
+		Global: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return configDirectory, nil
+		},
+	}
+}
+
+func serviceConfig() *ServiceDefinition {
+	return &ServiceDefinition{
+		Name:   "config",
+		Global: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			configDirectory := ctn.Get("config_directory").(string)
+			return newViperConfig(ctn.Get("app").(*AppDefinition).Name, configDirectory)
+		},
+	}
 }

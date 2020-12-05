@@ -106,7 +106,7 @@ func (s *Spring) preDeploy() {
 func (s *Spring) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	defaultDefinitions := []*ServiceDefinition{serviceLogGlobal(), serviceLogForRequest()}
+	defaultDefinitions := []*ServiceDefinition{serviceLogGlobal(), serviceLogForRequest(), serviceConfig()}
 
 	for _, def := range append(defaultDefinitions, s.servicesDefinitions...) {
 		if def == nil {

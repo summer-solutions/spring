@@ -4,8 +4,6 @@ import (
 	"github.com/sarulabs/di"
 	"github.com/summer-solutions/spring"
 
-	"github.com/summer-solutions/spring/services/config"
-
 	"github.com/summer-solutions/orm"
 )
 
@@ -22,7 +20,7 @@ func OrmRegistry(init RegistryInitFunc) *spring.ServiceDefinition {
 			if err != nil {
 				return nil, err
 			}
-			registry := orm.InitByYaml(configService.(*config.ViperConfig).Get("orm").(map[string]interface{}))
+			registry := orm.InitByYaml(configService.(*spring.ViperConfig).Get("orm").(map[string]interface{}))
 			init(registry)
 			ormConfig, err = registry.Validate()
 			return ormConfig, err

@@ -8,7 +8,6 @@ import (
 
 	apexLog "github.com/apex/log"
 	"github.com/summer-solutions/orm"
-	"github.com/summer-solutions/spring/services/config"
 )
 
 var container di.Container
@@ -57,12 +56,8 @@ func Log() apexLog.Interface {
 	return GetServiceRequired("log").(apexLog.Interface)
 }
 
-func Config() (*config.ViperConfig, bool) {
-	v, has := GetServiceOptional("config")
-	if has {
-		return v.(*config.ViperConfig), true
-	}
-	return nil, false
+func Config() *ViperConfig {
+	return GetServiceRequired("config").(*ViperConfig)
 }
 
 func OrmConfig() (orm.ValidatedRegistry, bool) {
