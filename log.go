@@ -4,7 +4,6 @@ import (
 	apexLog "github.com/apex/log"
 	"github.com/gin-gonic/gin"
 	"github.com/sarulabs/di"
-	"github.com/summer-solutions/spring/app"
 )
 
 type LogRequestFieldProvider func(ctx *gin.Context) apexLog.Fielder
@@ -13,7 +12,6 @@ type LogFieldProvider func() apexLog.Fielder
 type RequestLog struct {
 	providers []LogRequestFieldProvider
 	entry     apexLog.Interface
-	container di.Container
 }
 
 func serviceLogGlobal() *ServiceDefinition {
@@ -56,7 +54,7 @@ func serviceLogForRequest() *ServiceDefinition {
 
 func (l *RequestLog) Log(ctx *gin.Context) apexLog.Interface {
 	if l.entry == nil {
-		appName := l.container.Get("app").(*app.App).Name
+		appName := App().Name
 		entry := apexLog.WithFields(&apexLog.Fields{"app": appName})
 		for _, p := range l.providers {
 			fields := p(ctx)

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/summer-solutions/spring/app"
-
 	"github.com/sarulabs/di"
 	ginLocal "github.com/summer-solutions/spring/gin"
 
@@ -52,8 +50,8 @@ func GetServiceForRequestRequired(ctx context.Context, key string) interface{} {
 	return getServiceRequired(getContainerFromRequest(ctx), key)
 }
 
-func App() *app.App {
-	return GetServiceRequired("app").(*app.App)
+func App() *AppDefinition {
+	return GetServiceRequired("app").(*AppDefinition)
 }
 
 func Log() apexLog.Interface {

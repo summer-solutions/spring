@@ -9,8 +9,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/summer-solutions/spring/app"
-
 	"github.com/fatih/color"
 	ginSpring "github.com/summer-solutions/spring/gin"
 
@@ -31,7 +29,7 @@ import (
 type GinMiddleWareProvider func() gin.HandlerFunc
 
 type Spring struct {
-	app                 *app.App
+	app                 *AppDefinition
 	servicesDefinitions []*ServiceDefinition
 	middlewares         []GinMiddleWareProvider
 }
@@ -39,9 +37,9 @@ type Spring struct {
 func New(appName string) *Spring {
 	mode, hasMode := os.LookupEnv("SPRING_MODE")
 	if !hasMode {
-		mode = app.ModeLocal
+		mode = ModeLocal
 	}
-	s := &Spring{app: &app.App{Mode: mode, Name: appName}}
+	s := &Spring{app: &AppDefinition{Mode: mode, Name: appName}}
 	return s
 }
 
