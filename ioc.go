@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/sarulabs/di"
-	ginLocal "github.com/summer-solutions/spring/gin"
 
 	apexLog "github.com/apex/log"
 	"github.com/summer-solutions/orm"
@@ -117,7 +116,7 @@ func getServiceRequired(ctn di.Container, key string) interface{} {
 }
 
 func getContainerFromRequest(ctx context.Context) (ctn di.Container) {
-	c := ginLocal.FromContext(ctx)
+	c := GinFromContext(ctx)
 	requestContainer, has := c.Get("RequestContainer")
 
 	if !has {

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	ginSpring "github.com/summer-solutions/spring/gin"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -198,7 +197,7 @@ func (s *Spring) initGin(server graphql.ExecutableSchema) *gin.Engine {
 		ginEngine.Use(gin.Logger())
 	}
 
-	ginEngine.Use(ginSpring.ContextToContextMiddleware())
+	ginEngine.Use(contextToContextMiddleware())
 	for _, provider := range s.middlewares {
 		middleware := provider()
 		if middleware != nil {

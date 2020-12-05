@@ -1,4 +1,4 @@
-package gin
+package spring
 
 import (
 	"context"
@@ -12,11 +12,11 @@ const (
 	ginKey key = iota
 )
 
-func FromContext(ctx context.Context) *gin.Context {
+func GinFromContext(ctx context.Context) *gin.Context {
 	return ctx.Value(ginKey).(*gin.Context)
 }
 
-func ContextToContextMiddleware() gin.HandlerFunc {
+func contextToContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := context.WithValue(c.Request.Context(), ginKey, c)
 		c.Request = c.Request.WithContext(ctx)
