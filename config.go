@@ -17,7 +17,7 @@ type Config struct {
 	*viper.Viper
 }
 
-func DICConfigDirectory(configDirectory string) *ServiceDefinition {
+func ServiceProviderConfigDirectory(configDirectory string) *ServiceDefinition {
 	return &ServiceDefinition{
 		Name:   "config_directory",
 		Global: true,
