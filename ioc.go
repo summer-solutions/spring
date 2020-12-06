@@ -126,7 +126,3 @@ func getContainerFromRequest(ctx context.Context) (ctn di.Container) {
 	}
 	return ctn
 }
-
-func setContainer(diContainer di.Container) {
-	container = diContainer
-}
