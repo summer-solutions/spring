@@ -17,6 +17,16 @@ type Config struct {
 	*viper.Viper
 }
 
+func DICConfigDirectory(configDirectory string) *ServiceDefinition {
+	return &ServiceDefinition{
+		Name:   "config_directory",
+		Global: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return configDirectory, nil
+		},
+	}
+}
+
 func newViperConfig(appName, localConfigFolder string) (*Config, error) {
 	viper.SetConfigName(configName)
 
@@ -93,16 +103,6 @@ func (v *Config) GetMainPath() string {
 	}
 
 	return path
-}
-
-func ServiceConfigDirectory(configDirectory string) *ServiceDefinition {
-	return &ServiceDefinition{
-		Name:   "config_directory",
-		Global: true,
-		Build: func(ctn di.Container) (interface{}, error) {
-			return configDirectory, nil
-		},
-	}
 }
 
 func serviceConfig() *ServiceDefinition {
