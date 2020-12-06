@@ -5,9 +5,6 @@ import (
 	"fmt"
 
 	"github.com/sarulabs/di"
-
-	apexLog "github.com/apex/log"
-	"github.com/summer-solutions/orm"
 )
 
 var container di.Container
@@ -46,38 +43,6 @@ func GetServiceForRequestOptional(ctx context.Context, key string) (service inte
 
 func GetServiceForRequestRequired(ctx context.Context, key string) interface{} {
 	return getServiceRequired(getContainerFromRequest(ctx), key)
-}
-
-func App() *AppDefinition {
-	return GetServiceRequired("app").(*AppDefinition)
-}
-
-func Log() apexLog.Interface {
-	return GetServiceRequired("log").(apexLog.Interface)
-}
-
-func Config() *ViperConfig {
-	return GetServiceRequired("config").(*ViperConfig)
-}
-
-func OrmConfig() (orm.ValidatedRegistry, bool) {
-	v, has := GetServiceOptional("orm_config")
-	if has {
-		return v.(orm.ValidatedRegistry), true
-	}
-	return nil, false
-}
-
-func LogForContext(ctx context.Context) *RequestLog {
-	return GetServiceForRequestRequired(ctx, "log_request").(*RequestLog)
-}
-
-func OrmEngineForContext(ctx context.Context) (*orm.Engine, bool) {
-	v, has := GetServiceForRequestOptional(ctx, "orm_engine")
-	if has {
-		return v.(*orm.Engine), true
-	}
-	return nil, false
 }
 
 func getServiceSafe(ctn di.Container, key string) (service interface{}, has bool, err error) {
