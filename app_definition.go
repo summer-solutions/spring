@@ -6,12 +6,17 @@ const ModeLocal = "local"
 const ModeProd = "prod"
 
 type AppDefinition struct {
-	mode string
-	name string
+	mode  string
+	name  string
+	flags *Flags
 }
 
 func (app *AppDefinition) Name() string {
 	return app.name
+}
+
+func (app *AppDefinition) Flags() *Flags {
+	return app.flags
 }
 
 func (app *AppDefinition) IsInLocalMode() bool {

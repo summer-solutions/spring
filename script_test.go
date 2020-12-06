@@ -21,7 +21,7 @@ func (script *testScript) Unique() bool {
 }
 
 func TestRunScript(t *testing.T) {
-	s := New("test_script").RegisterDIService()
+	r := New("test_script").RegisterDIService()
 	testService := &ServiceDefinition{
 		Name:   "test_service",
 		Global: true,
@@ -29,7 +29,7 @@ func TestRunScript(t *testing.T) {
 			return "hello", nil
 		},
 	}
-	s.RegisterDIService(testService)
+	s := r.RegisterDIService(testService).Build()
 
 	testScript := &testScript{}
 	s.RunScript(testScript)

@@ -14,6 +14,7 @@ type ServiceDefinition struct {
 	Global bool
 	Build  func(ctn di.Container) (interface{}, error)
 	Close  func(obj interface{}) error
+	Flags  func(registry *FlagsRegistry)
 }
 
 func HasService(key string) bool {

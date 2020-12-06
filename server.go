@@ -13,10 +13,7 @@ func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema) {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
 
-	s.initializeIoCHandlers()
-	s.initializeLog()
 	ginEngine := initGin(s, server)
-	preDeploy()
 	ginEngine.GET("/", playgroundHandler())
 
 	panic(ginEngine.Run(":" + port))

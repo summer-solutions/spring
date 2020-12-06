@@ -7,7 +7,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func preDeploy() {
+func PreDeploy() {
 	preDeployFlag := flag.Bool("pre-deploy", false, "Execute pre deploy mode")
 	flag.Parse()
 

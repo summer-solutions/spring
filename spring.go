@@ -1,41 +1,47 @@
 package spring
 
 import (
+	"flag"
 	"os"
-
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/json"
-	"github.com/apex/log/handlers/text"
 
 	"github.com/sarulabs/di"
 )
 
-type Spring struct {
+type Registry struct {
 	app                 *AppDefinition
 	servicesDefinitions []*ServiceDefinition
 	middlewares         []GinMiddleWareProvider
 }
 
-func New(appName string) *Spring {
+type Spring struct {
+	registry *Registry
+}
+
+func New(appName string) *Registry {
 	mode, hasMode := os.LookupEnv("SPRING_MODE")
 	if !hasMode {
 		mode = ModeLocal
 	}
-	s := &Spring{app: &AppDefinition{mode: mode, name: appName}}
-	return s
+	return &Registry{app: &AppDefinition{mode: mode, name: appName}}
 }
 
-func (s *Spring) RegisterDIService(service ...*ServiceDefinition) *Spring {
+func (s *Registry) Build() *Spring {
+	s.initializeIoCHandlers()
+	s.initializeLog()
+	return &Spring{registry: s}
+}
+
+func (s *Registry) RegisterDIService(service ...*ServiceDefinition) *Registry {
 	s.servicesDefinitions = append(s.servicesDefinitions, service...)
 	return s
 }
 
-func (s *Spring) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Spring {
+func (s *Registry) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Registry {
 	s.middlewares = append(s.middlewares, provider...)
 	return s
 }
 
-func (s *Spring) initializeIoCHandlers() {
+func (s *Registry) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
 	defaultDefinitions := []*ServiceDefinition{
@@ -45,6 +51,7 @@ func (s *Spring) initializeIoCHandlers() {
 		serviceConfig(),
 	}
 
+	flagsRegistry := &FlagsRegistry{flags: make(map[string]interface{})}
 	for _, def := range append(defaultDefinitions, s.servicesDefinitions...) {
 		if def == nil {
 			continue
@@ -66,6 +73,9 @@ func (s *Spring) initializeIoCHandlers() {
 		if err != nil {
 			panic(err)
 		}
+		if def.Flags != nil {
+			def.Flags(flagsRegistry)
+		}
 	}
 
 	err := ioCBuilder.Add()
@@ -75,19 +85,6 @@ func (s *Spring) initializeIoCHandlers() {
 	}
 	container = ioCBuilder.Build()
 	dicInstance = &dic{}
-}
-
-func (s *Spring) initializeLog() {
-	if DIC().App().IsInProdMode() {
-		h, has := GetServiceOptional("log_handler")
-		if !has {
-			log.SetHandler(h.(log.Handler))
-		} else {
-			log.SetHandler(json.Default)
-		}
-		log.SetLevel(log.WarnLevel)
-	} else {
-		log.SetHandler(text.Default)
-		log.SetLevel(log.DebugLevel)
-	}
+	flag.Parse()
+	s.app.flags = &Flags{flagsRegistry}
 }

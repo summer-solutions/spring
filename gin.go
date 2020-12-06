@@ -48,7 +48,7 @@ func initGin(s *Spring, server graphql.ExecutableSchema) *gin.Engine {
 	}
 
 	ginEngine.Use(contextToContextMiddleware())
-	for _, provider := range s.middlewares {
+	for _, provider := range s.registry.middlewares {
 		middleware := provider()
 		if middleware != nil {
 			ginEngine.Use(middleware)

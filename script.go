@@ -16,13 +16,10 @@ type ScriptInterval interface {
 }
 
 func (s *Spring) RunScript(script Script) {
-	s.initializeIoCHandlers()
-	s.initializeLog()
 	s.runScript(script)
 }
 
 func (s *Spring) RunScriptInterval(script ScriptInterval) {
-	s.initializeIoCHandlers()
 	go func(script ScriptInterval) {
 		for {
 			valid := s.runScript(script)
@@ -37,7 +34,6 @@ func (s *Spring) RunScriptInterval(script ScriptInterval) {
 }
 
 func (s *Spring) runScript(script Script) bool {
-	s.initializeIoCHandlers()
 	return func() bool {
 		valid := true
 		defer func() {

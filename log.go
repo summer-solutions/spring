@@ -2,6 +2,8 @@ package spring
 
 import (
 	apexLog "github.com/apex/log"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/text"
 	"github.com/gin-gonic/gin"
 	"github.com/sarulabs/di"
 )
@@ -64,4 +66,19 @@ func (l *RequestLog) Log(ctx *gin.Context) apexLog.Interface {
 		l.entry = entry
 	}
 	return l.entry
+}
+
+func (s *Registry) initializeLog() {
+	if DIC().App().IsInProdMode() {
+		h, has := GetServiceOptional("log_handler")
+		if !has {
+			apexLog.SetHandler(h.(apexLog.Handler))
+		} else {
+			apexLog.SetHandler(json.Default)
+		}
+		apexLog.SetLevel(apexLog.WarnLevel)
+	} else {
+		apexLog.SetHandler(text.Default)
+		apexLog.SetLevel(apexLog.DebugLevel)
+	}
 }
