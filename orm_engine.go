@@ -7,7 +7,7 @@ import (
 	"github.com/summer-solutions/orm"
 )
 
-func OrmEngine() *ServiceDefinition {
+func ServiceDefinitionOrmEngine() *ServiceDefinition {
 	return &ServiceDefinition{
 		Name:   "orm_engine",
 		Global: false,

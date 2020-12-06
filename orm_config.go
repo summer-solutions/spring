@@ -8,7 +8,7 @@ import (
 
 type ORMRegistryInitFunc func(registry *orm.Registry)
 
-func OrmRegistry(init ORMRegistryInitFunc) *ServiceDefinition {
+func ServiceDefinitionOrmRegistry(init ORMRegistryInitFunc) *ServiceDefinition {
 	return &ServiceDefinition{
 		Name:   "orm_config",
 		Global: true,

@@ -20,6 +20,14 @@ func (script *testScript) Unique() bool {
 	return false
 }
 
+func (script *testScript) Code() string {
+	return "test script"
+}
+
+func (script *testScript) Description() string {
+	return "test description"
+}
+
 func TestRunScript(t *testing.T) {
 	r := New("test_script").RegisterDIService()
 	testService := &ServiceDefinition{

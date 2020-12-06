@@ -1,11 +1,16 @@
 package spring
 
 import (
+	"fmt"
 	"runtime/debug"
 	"time"
+
+	"github.com/sarulabs/di"
 )
 
 type Script interface {
+	Code() string
+	Description() string
 	Run() error
 	Unique() bool
 }
@@ -31,6 +36,23 @@ func (s *Spring) RunScriptInterval(script ScriptInterval) {
 			}
 		}
 	}(script)
+}
+
+func ServiceDefinitionDynamicScript(scripts ...Script) *ServiceDefinition {
+	return &ServiceDefinition{
+		Name:   "scripts",
+		Global: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return scripts, nil
+		},
+		Flags: func(registry *FlagsRegistry) {
+			total := len(scripts)
+			if len(scripts) > 0 {
+				registry.Bool("scripts", false, fmt.Sprintf("list all %d available scripts", total))
+				registry.String("run-script", "", "run script")
+			}
+		},
+	}
 }
 
 func (s *Spring) runScript(script Script) bool {
