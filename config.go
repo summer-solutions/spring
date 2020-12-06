@@ -13,11 +13,11 @@ import (
 
 const configName = "config"
 
-type ViperConfig struct {
+type Config struct {
 	*viper.Viper
 }
 
-func newViperConfig(appName, localConfigFolder string) (*ViperConfig, error) {
+func newViperConfig(appName, localConfigFolder string) (*Config, error) {
 	viper.SetConfigName(configName)
 
 	configFolder, hasConfigFolder := os.LookupEnv("SPRING_CONFIG_FOLDER")
@@ -32,7 +32,7 @@ func newViperConfig(appName, localConfigFolder string) (*ViperConfig, error) {
 		return nil, err
 	}
 
-	viperConfig := &ViperConfig{
+	viperConfig := &Config{
 		viper.GetViper(),
 	}
 
@@ -44,7 +44,7 @@ func newViperConfig(appName, localConfigFolder string) (*ViperConfig, error) {
 	return viperConfig, nil
 }
 
-func (v *ViperConfig) loadEnvConfig() error {
+func (v *Config) loadEnvConfig() error {
 	mainConfigFolderPath := v.GetMainPath()
 	if _, err := os.Stat(mainConfigFolderPath + "/../.env.local"); os.IsNotExist(err) {
 		return nil
@@ -70,7 +70,7 @@ func (v *ViperConfig) loadEnvConfig() error {
 	return nil
 }
 
-func (v *ViperConfig) GetMainPath() string {
+func (v *Config) GetMainPath() string {
 	fileUsed := v.ConfigFileUsed()
 	abs, _ := filepath.Abs(fileUsed)
 

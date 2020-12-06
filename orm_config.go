@@ -13,11 +13,7 @@ func OrmRegistry(init ORMRegistryInitFunc) *ServiceDefinition {
 		Name:   "orm_config",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
-			configService, err := ctn.SafeGet("config")
-			if err != nil {
-				return nil, err
-			}
-			registry := orm.InitByYaml(configService.(*ViperConfig).Get("orm").(map[string]interface{}))
+			registry := orm.InitByYaml(DIC().Config().Get("orm").(map[string]interface{}))
 			init(registry)
 			ormConfig, err := registry.Validate()
 			return ormConfig, err

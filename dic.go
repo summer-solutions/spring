@@ -10,7 +10,7 @@ import (
 type DICInterface interface {
 	App() *AppDefinition
 	Log() apexLog.Interface
-	Config() *ViperConfig
+	Config() *Config
 	OrmConfig() (orm.ValidatedRegistry, bool)
 	LogForContext(ctx context.Context) *RequestLog
 	OrmEngineForContext(ctx context.Context) (*orm.Engine, bool)
@@ -33,8 +33,8 @@ func (d *dic) Log() apexLog.Interface {
 	return GetServiceRequired("log").(apexLog.Interface)
 }
 
-func (d *dic) Config() *ViperConfig {
-	return GetServiceRequired("config").(*ViperConfig)
+func (d *dic) Config() *Config {
+	return GetServiceRequired("config").(*Config)
 }
 
 func (d *dic) OrmConfig() (orm.ValidatedRegistry, bool) {
