@@ -12,9 +12,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/json"
-	"github.com/apex/log/handlers/text"
 	"github.com/gin-contrib/timeout"
 
 	"github.com/gin-gonic/gin"
@@ -46,17 +43,7 @@ func initGin(s *Spring, server graphql.ExecutableSchema) *gin.Engine {
 	}
 	ginEngine := gin.New()
 
-	if DIC().App().IsInProdMode() {
-		h, has := GetServiceOptional("log_handler")
-		if !has {
-			log.SetHandler(h.(log.Handler))
-		} else {
-			log.SetHandler(json.Default)
-		}
-		log.SetLevel(log.WarnLevel)
-	} else {
-		log.SetHandler(text.Default)
-		log.SetLevel(log.DebugLevel)
+	if !DIC().App().IsInProdMode() {
 		ginEngine.Use(gin.Logger())
 	}
 

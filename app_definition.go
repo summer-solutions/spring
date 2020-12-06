@@ -4,8 +4,12 @@ const ModeLocal = "local"
 const ModeProd = "prod"
 
 type AppDefinition struct {
-	Mode string
-	Name string
+	mode string
+	name string
+}
+
+func (app *AppDefinition) Name() string {
+	return app.mode
 }
 
 func (app *AppDefinition) IsInLocalMode() bool {
@@ -16,5 +20,5 @@ func (app *AppDefinition) IsInProdMode() bool {
 	return app.IsInMode(ModeProd)
 }
 func (app *AppDefinition) IsInMode(mode string) bool {
-	return app.Mode == mode
+	return app.mode == mode
 }

@@ -1,10 +1,12 @@
 package spring
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/99designs/gqlgen/graphql"
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/text"
+
 	"github.com/sarulabs/di"
 )
 
@@ -19,7 +21,7 @@ func New(appName string) *Spring {
 	if !hasMode {
 		mode = ModeLocal
 	}
-	s := &Spring{app: &AppDefinition{Mode: mode, Name: appName}}
+	s := &Spring{app: &AppDefinition{mode: mode, name: appName}}
 	return s
 }
 
@@ -31,20 +33,6 @@ func (s *Spring) RegisterDIService(service ...*ServiceDefinition) *Spring {
 func (s *Spring) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Spring {
 	s.middlewares = append(s.middlewares, provider...)
 	return s
-}
-
-func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema) {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = fmt.Sprintf("%d", defaultPort)
-	}
-
-	s.initializeIoCHandlers()
-	ginEngine := initGin(s, server)
-	preDeploy()
-	ginEngine.GET("/", playgroundHandler())
-
-	panic(ginEngine.Run(":" + port))
 }
 
 func (s *Spring) initializeIoCHandlers() {
@@ -88,4 +76,19 @@ func (s *Spring) initializeIoCHandlers() {
 	}
 	container = ioCBuilder.Build()
 	dicInstance = &dic{}
+}
+
+func (s *Spring) initializeLog() {
+	if DIC().App().IsInProdMode() {
+		h, has := GetServiceOptional("log_handler")
+		if !has {
+			log.SetHandler(h.(log.Handler))
+		} else {
+			log.SetHandler(json.Default)
+		}
+		log.SetLevel(log.WarnLevel)
+	} else {
+		log.SetHandler(text.Default)
+		log.SetLevel(log.DebugLevel)
+	}
 }

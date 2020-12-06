@@ -55,7 +55,7 @@ func newViperConfig(appName, localConfigFolder string) (*Config, error) {
 }
 
 func (v *Config) loadEnvConfig() error {
-	mainConfigFolderPath := v.GetMainPath()
+	mainConfigFolderPath := v.getMainPath()
 	if _, err := os.Stat(mainConfigFolderPath + "/../.env.local"); os.IsNotExist(err) {
 		return nil
 	}
@@ -80,7 +80,7 @@ func (v *Config) loadEnvConfig() error {
 	return nil
 }
 
-func (v *Config) GetMainPath() string {
+func (v *Config) getMainPath() string {
 	fileUsed := v.ConfigFileUsed()
 	abs, _ := filepath.Abs(fileUsed)
 
@@ -111,7 +111,7 @@ func serviceConfig() *ServiceDefinition {
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
 			configDirectory := ctn.Get("config_directory").(string)
-			return newViperConfig(ctn.Get("app").(*AppDefinition).Name, configDirectory)
+			return newViperConfig(DIC().App().Name(), configDirectory)
 		},
 	}
 }

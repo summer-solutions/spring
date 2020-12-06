@@ -17,6 +17,7 @@ type ScriptInterval interface {
 
 func (s *Spring) RunScript(script Script) {
 	s.initializeIoCHandlers()
+	s.initializeLog()
 	s.runScript(script)
 }
 
