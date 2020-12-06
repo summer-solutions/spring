@@ -87,4 +87,5 @@ func (s *Spring) initializeIoCHandlers() {
 		panic(err)
 	}
 	container = ioCBuilder.Build()
+	dicInstance = &dic{}
 }

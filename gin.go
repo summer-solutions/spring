@@ -41,12 +41,12 @@ func contextToContextMiddleware() gin.HandlerFunc {
 }
 
 func initGin(s *Spring, server graphql.ExecutableSchema) *gin.Engine {
-	if App().IsInProdMode() {
+	if DIC().App().IsInProdMode() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	ginEngine := gin.New()
 
-	if App().IsInProdMode() {
+	if DIC().App().IsInProdMode() {
 		h, has := GetServiceOptional("log_handler")
 		if !has {
 			log.SetHandler(h.(log.Handler))
@@ -97,7 +97,7 @@ func graphqlHandler(server graphql.ExecutableSchema) gin.HandlerFunc {
 			message = "panic"
 		}
 		errorMessage := message + "\n" + string(debug.Stack())
-		Log().Error(errorMessage)
+		DIC().Log().Error(errorMessage)
 		return errors.New("internal server error")
 	})
 	return func(c *gin.Context) {

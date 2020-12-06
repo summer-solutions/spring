@@ -15,7 +15,7 @@ func preDeploy() {
 		return
 	}
 
-	ormConfigService, has := OrmConfig()
+	ormConfigService, has := DIC().OrmConfig()
 	if !has {
 		return
 	}
@@ -37,7 +37,7 @@ func preDeploy() {
 		os.Exit(1)
 	}
 
-	if !App().IsInLocalMode() {
+	if !DIC().App().IsInLocalMode() {
 		os.Exit(0)
 	}
 }

@@ -48,7 +48,7 @@ func (s *Spring) runScript(script Script) bool {
 				} else {
 					message = "panic"
 				}
-				Log().Error(message + "\n" + string(debug.Stack()))
+				DIC().Log().Error(message + "\n" + string(debug.Stack()))
 				valid = false
 			}
 		}()
