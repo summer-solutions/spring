@@ -38,7 +38,12 @@ func (s *Spring) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Sprin
 func (s *Spring) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
-	defaultDefinitions := []*ServiceDefinition{serviceLogGlobal(), serviceLogForRequest(), serviceConfig()}
+	defaultDefinitions := []*ServiceDefinition{
+		serviceApp(s.app),
+		serviceLogGlobal(),
+		serviceLogForRequest(),
+		serviceConfig(),
+	}
 
 	for _, def := range append(defaultDefinitions, s.servicesDefinitions...) {
 		if def == nil {
@@ -63,13 +68,7 @@ func (s *Spring) initializeIoCHandlers() {
 		}
 	}
 
-	err := ioCBuilder.Add(di.Def{
-		Name:  "app",
-		Scope: di.App,
-		Build: func(di.Container) (interface{}, error) {
-			return s.app, nil
-		},
-	})
+	err := ioCBuilder.Add()
 
 	if err != nil {
 		panic(err)

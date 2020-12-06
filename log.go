@@ -19,7 +19,7 @@ func serviceLogGlobal() *ServiceDefinition {
 		Name:   "log",
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
-			l := apexLog.WithFields(&apexLog.Fields{"app": DIC().App().Name})
+			l := apexLog.WithFields(&apexLog.Fields{"app": DIC().App().Name()})
 			key := "_log_providers"
 			_, has := ctn.Definitions()[key]
 			if has {
@@ -54,8 +54,7 @@ func serviceLogForRequest() *ServiceDefinition {
 
 func (l *RequestLog) Log(ctx *gin.Context) apexLog.Interface {
 	if l.entry == nil {
-		appName := DIC().App().Name
-		entry := apexLog.WithFields(&apexLog.Fields{"app": appName})
+		entry := apexLog.WithFields(&apexLog.Fields{"app": DIC().App().Name()})
 		for _, p := range l.providers {
 			fields := p(ctx)
 			if fields != nil {

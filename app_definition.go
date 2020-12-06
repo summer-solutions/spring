@@ -1,5 +1,7 @@
 package spring
 
+import "github.com/sarulabs/di"
+
 const ModeLocal = "local"
 const ModeProd = "prod"
 
@@ -9,7 +11,7 @@ type AppDefinition struct {
 }
 
 func (app *AppDefinition) Name() string {
-	return app.mode
+	return app.name
 }
 
 func (app *AppDefinition) IsInLocalMode() bool {
@@ -21,4 +23,14 @@ func (app *AppDefinition) IsInProdMode() bool {
 }
 func (app *AppDefinition) IsInMode(mode string) bool {
 	return app.mode == mode
+}
+
+func serviceApp(app *AppDefinition) *ServiceDefinition {
+	return &ServiceDefinition{
+		Name:   "app",
+		Global: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return app, nil
+		},
+	}
 }

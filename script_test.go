@@ -34,6 +34,6 @@ func TestRunScript(t *testing.T) {
 	testScript := &testScript{}
 	s.RunScript(testScript)
 	assert.Equal(t, 1, testScript.RunCounter)
-	assert.Equal(t, "test_script", DIC().App().Name)
+	assert.Equal(t, "test_script", DIC().App().Name())
 	assert.Equal(t, "hello", GetServiceRequired("test_service"))
 }
