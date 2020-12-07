@@ -12,6 +12,7 @@ type DICInterface interface {
 	Log() apexLog.Interface
 	Config() *Config
 	OrmConfig() (orm.ValidatedRegistry, bool)
+	OrmEngine() (*orm.Engine, bool)
 	LogForContext(ctx context.Context) *RequestLog
 	OrmEngineForContext(ctx context.Context) (*orm.Engine, bool)
 }
