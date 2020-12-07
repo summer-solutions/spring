@@ -28,6 +28,7 @@ func GinFromContext(ctx context.Context) *gin.Context {
 }
 
 type GinMiddleWareProvider func() gin.HandlerFunc
+type GinInitHandler func(Router *gin.Engine)
 
 func contextToContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -37,7 +38,18 @@ func contextToContextMiddleware() gin.HandlerFunc {
 	}
 }
 
-func initGin(s *Spring, server graphql.ExecutableSchema) *gin.Engine {
+func afterRequestMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+
+		err := getContainerFromRequest(c).Delete()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func InitGin(s *Spring, server graphql.ExecutableSchema, ginInitHandler GinInitHandler) *gin.Engine {
 	if DIC().App().IsInProdMode() {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -48,6 +60,7 @@ func initGin(s *Spring, server graphql.ExecutableSchema) *gin.Engine {
 	}
 
 	ginEngine.Use(contextToContextMiddleware())
+	ginEngine.Use(afterRequestMiddleware())
 	for _, provider := range s.registry.middlewares {
 		middleware := provider()
 		if middleware != nil {
@@ -56,6 +69,9 @@ func initGin(s *Spring, server graphql.ExecutableSchema) *gin.Engine {
 	}
 
 	ginEngine.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
+	ginEngine.GET("/", playgroundHandler())
+
+	ginInitHandler(ginEngine)
 
 	return ginEngine
 }

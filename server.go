@@ -7,14 +7,13 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
-func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema) {
+func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema, ginInitHandler GinInitHandler) {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
 
-	ginEngine := initGin(s, server)
-	ginEngine.GET("/", playgroundHandler())
+	ginEngine := InitGin(s, server, ginInitHandler)
 
 	panic(ginEngine.Run(":" + port))
 }
