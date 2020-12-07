@@ -5,6 +5,9 @@ import (
 )
 
 type testScript struct {
+	name        string
+	description string
+	unique      bool
 }
 
 func (script *testScript) Run() error {
@@ -12,18 +15,19 @@ func (script *testScript) Run() error {
 }
 
 func (script *testScript) Unique() bool {
-	return false
+	return script.unique
 }
 
 func (script *testScript) Code() string {
-	return "test script"
+	return script.name
 }
 
 func (script *testScript) Description() string {
-	return "test description"
+	return script.description
 }
 
 func main() {
 	r := spring.New("test_script").RegisterDIService()
-	r.RegisterDIService(spring.ServiceDefinitionDynamicScript(&testScript{})).Build()
+	r.RegisterDIService(spring.ServiceDefinitionDynamicScript(&testScript{"hello", "takie tam", false},
+		&testScript{"hello-second", "takie tam inne description", true})).Build()
 }

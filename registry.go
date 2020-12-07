@@ -25,34 +25,37 @@ func New(appName string) *Registry {
 	return &Registry{app: &AppDefinition{mode: mode, name: appName}}
 }
 
-func (s *Registry) Build() *Spring {
-	s.initializeIoCHandlers()
-	s.initializeLog()
-	return &Spring{registry: s}
+func (r *Registry) Build() *Spring {
+	r.initializeIoCHandlers()
+	r.initializeLog()
+	if DIC().App().Flags().Bool("list-scripts") {
+		listScrips()
+	}
+	return &Spring{registry: r}
 }
 
-func (s *Registry) RegisterDIService(service ...*ServiceDefinition) *Registry {
-	s.servicesDefinitions = append(s.servicesDefinitions, service...)
-	return s
+func (r *Registry) RegisterDIService(service ...*ServiceDefinition) *Registry {
+	r.servicesDefinitions = append(r.servicesDefinitions, service...)
+	return r
 }
 
-func (s *Registry) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Registry {
-	s.middlewares = append(s.middlewares, provider...)
-	return s
+func (r *Registry) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Registry {
+	r.middlewares = append(r.middlewares, provider...)
+	return r
 }
 
-func (s *Registry) initializeIoCHandlers() {
+func (r *Registry) initializeIoCHandlers() {
 	ioCBuilder, _ := di.NewBuilder()
 
 	defaultDefinitions := []*ServiceDefinition{
-		serviceApp(s.app),
+		serviceApp(r.app),
 		serviceLogGlobal(),
 		serviceLogForRequest(),
 		serviceConfig(),
 	}
 
 	flagsRegistry := &FlagsRegistry{flags: make(map[string]interface{})}
-	for _, def := range append(defaultDefinitions, s.servicesDefinitions...) {
+	for _, def := range append(defaultDefinitions, r.servicesDefinitions...) {
 		if def == nil {
 			continue
 		}
@@ -86,5 +89,5 @@ func (s *Registry) initializeIoCHandlers() {
 	container = ioCBuilder.Build()
 	dicInstance = &dic{}
 	flag.Parse()
-	s.app.flags = &Flags{flagsRegistry}
+	r.app.flags = &Flags{flagsRegistry}
 }

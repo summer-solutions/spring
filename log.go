@@ -68,7 +68,7 @@ func (l *RequestLog) Log(ctx *gin.Context) apexLog.Interface {
 	return l.entry
 }
 
-func (s *Registry) initializeLog() {
+func (r *Registry) initializeLog() {
 	if DIC().App().IsInProdMode() {
 		h, has := GetServiceOptional("log_handler")
 		if !has {

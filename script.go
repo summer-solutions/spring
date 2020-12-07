@@ -2,9 +2,12 @@ package spring
 
 import (
 	"fmt"
+	"os"
 	"runtime/debug"
+	"strings"
 	"time"
 
+	"github.com/ryanuber/columnize"
 	"github.com/sarulabs/di"
 )
 
@@ -48,11 +51,30 @@ func ServiceDefinitionDynamicScript(scripts ...Script) *ServiceDefinition {
 		Flags: func(registry *FlagsRegistry) {
 			total := len(scripts)
 			if len(scripts) > 0 {
-				registry.Bool("scripts", false, fmt.Sprintf("list all %d available scripts", total))
+				registry.Bool("list-scripts", false, fmt.Sprintf("list all %d available scripts", total))
 				registry.String("run-script", "", "run script")
 			}
 		},
 	}
+}
+
+func listScrips() {
+	service, has := GetServiceOptional("scripts")
+	if has {
+		output := []string{
+			"NAME | UNIQUE | DESCRIPTION ",
+		}
+		for _, def := range service.([]Script) {
+			var unique string
+			if def.Unique() {
+				unique = "true"
+			}
+			output = append(output, strings.Join([]string{def.Code(), unique, def.Description()}, " | "))
+		}
+		result := columnize.SimpleFormat(output)
+		fmt.Println(result)
+	}
+	os.Exit(0)
 }
 
 func (s *Spring) runScript(script Script) bool {
