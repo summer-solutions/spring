@@ -23,7 +23,11 @@ func (script *ORMAltersScript) Code() string {
 	return "orm-alters"
 }
 
-func (script *ORMAltersScript) Run() {
+func (script *ORMAltersScript) Description() string {
+	return "orm-alters"
+}
+
+func (script *ORMAltersScript) Run() error {
 	ormEngine, _ := spring.DIC().OrmEngine()
 
 	alters := ormEngine.GetAlters()
@@ -39,4 +43,5 @@ func (script *ORMAltersScript) Run() {
 	if len(alters) > 0 {
 		os.Exit(1)
 	}
+	return nil
 }
