@@ -28,8 +28,13 @@ func New(appName string) *Registry {
 func (r *Registry) Build() *Spring {
 	r.initializeIoCHandlers()
 	r.initializeLog()
-	if DIC().App().Flags().Bool("list-scripts") {
+	flags := DIC().App().Flags()
+	if flags.Bool("list-scripts") {
 		listScrips()
+	}
+	scriptToRun := flags.String("run-script")
+	if scriptToRun != "" {
+		runDynamicScrips(scriptToRun)
 	}
 	return &Spring{registry: r}
 }

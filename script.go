@@ -100,7 +100,23 @@ func listScrips() {
 		}
 		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output))
 	}
-	os.Exit(0)
+}
+
+func runDynamicScrips(code string) {
+	service, has := GetServiceOptional("scripts")
+	if !has {
+		panic(fmt.Sprintf("unknown script %s", code))
+	}
+	for _, def := range service.([]Script) {
+		if def.Code() == code {
+			err := def.Run()
+			if err != nil {
+				panic(err)
+			}
+			os.Exit(0)
+		}
+	}
+	panic(fmt.Sprintf("unknown script %s", code))
 }
 
 func (s *Spring) runScript(script Script) bool {
