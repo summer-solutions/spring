@@ -22,12 +22,12 @@ type ScriptInterval interface {
 	Interval() time.Duration
 }
 
-type ScriptIntermediate interface {
-	IsIntermediate() bool
-}
-
 type ScriptIntervalOptional interface {
 	IntervalActive() bool
+}
+
+type ScriptIntermediate interface {
+	IsIntermediate() bool
 }
 
 type ScriptOptional interface {
@@ -104,7 +104,7 @@ func listScrips() {
 			}
 			output = append(output, strings.Join([]string{def.Code(), strings.Join(options, ","), def.Description()}, " | "))
 		}
-		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output))
+		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output) + "\n")
 	}
 }
 

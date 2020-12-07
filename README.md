@@ -129,11 +129,11 @@ func main() {
         Build: func() (interface{}, error) {
             return &SomeService{}, nil // you can return any data you want
         },
-        Close: func(obj interface{}) error {
-            // this method is optional, executed when service is not needed anymore
+        Close: func(obj interface{}) error { //optional
         },
-        Flags: func(registry *spring FlagsRegistry) {
-            // described later
+        Flags: func(registry *spring.FlagsRegistry) { //optional
+            registry.Bool("my-service-flag", false, "my flag description")
+            registry.String("my-other-flag", "default value", "my flag description")
         },
     }
     
@@ -141,6 +141,9 @@ func main() {
     spring.New("my_app").RegisterDIService(
       myService,
     )
+
+    // you can access flags:
+    val := spring.DIC().App().Flags().Bool("my-service-flag")
 }
 
 ```
@@ -203,4 +206,101 @@ func (d *dic) MyOtherServiceForContext(ctx context.Context) MyOtherService {
     return spring.GetServiceForRequestRequired(ctx, "other_service_key").(*MyOtherService)
 }
 
+```
+
+
+#### Running scripts
+
+
+First You need to define script definition that implements spring.Script interface:
+
+```go
+
+type TestScript struct {}
+
+func (script *testScript) Code() string {
+    return "test-script"
+}
+
+func (script *testScript) Unique() bool {
+    // if true you can't run more than one script at the same time
+    return false
+}
+
+func (script *testScript) Description() string {
+    return "script description"
+}
+
+func (script *testScript) Run() error {
+    // put login here
+    return nil
+}
+
+```
+
+Methods above are required. Optionally you can also implement these interfaces:
+
+```go
+
+// spring.ScriptInterval interface
+func (script *testScript) Interval() time.Duration {                                                    
+    // run script every minute
+    return time.Minute 
+}
+
+// spring.ScriptIntervalOptional interface
+func (script *testScript) IntervalActive() bool {                                                    
+    // only run first day of month
+    return time.Now().Day() == 1
+}
+
+// spring.ScriptIntermediate interface
+func (script *testScript) IsIntermediate() bool {                                                    
+    // script is intermediate, for example is listening for data in chain
+    return true
+}
+
+// spring.ScriptOptional interface
+func (script *testScript) Active() bool {                                                    
+    // this script is visible only in local mode
+    return DIC().App().IsInLocalMode()
+}
+
+```
+
+Once you defined script you can run it using RunScript method:
+
+```go
+package main
+import "github.com/summer-solutions/spring"
+
+func main() {
+    spring.New("app_name").Build().RunScript(&TestScript{})
+}
+``` 
+
+
+You can also register script as dynamic script and run it using program flag:
+
+```go
+package main
+import "github.com/summer-solutions/spring"
+
+func main() {
+    spring.New("app_name").RegisterDIService(
+        spring.ServiceDefinitionDynamicScript(&TestScript{}, &AnotherScript{}),
+    ).Build()
+}
+``` 
+
+You can see all available script by using special flag **-list-scripts**:
+
+```shell script
+./app -list-scripts
+```
+
+To run script:
+
+```shell script
+./app -run-script script-code
 ```
