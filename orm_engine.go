@@ -18,7 +18,7 @@ func ServiceDefinitionOrmEngineForContext() *ServiceDefinition {
 func serviceDefinitionOrmEngine(global bool) *ServiceDefinition {
 	suffix := "request"
 	if global {
-		suffix = "request"
+		suffix = "global"
 	}
 	return &ServiceDefinition{
 		Name:   "orm_engine_" + suffix,
