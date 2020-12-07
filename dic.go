@@ -20,7 +20,7 @@ type DICInterface interface {
 type dic struct {
 }
 
-var dicInstance *dic
+var dicInstance = &dic{}
 
 func DIC() DICInterface {
 	return dicInstance

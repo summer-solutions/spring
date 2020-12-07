@@ -15,6 +15,10 @@ func (app *AppDefinition) Name() string {
 	return app.name
 }
 
+func (app *AppDefinition) Mode() string {
+	return app.mode
+}
+
 func (app *AppDefinition) Flags() *Flags {
 	return app.flags
 }

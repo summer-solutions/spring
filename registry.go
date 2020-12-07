@@ -10,7 +10,6 @@ import (
 type Registry struct {
 	app                 *AppDefinition
 	servicesDefinitions []*ServiceDefinition
-	middlewares         []GinMiddleWareProvider
 }
 
 type Spring struct {
@@ -41,11 +40,6 @@ func (r *Registry) Build() *Spring {
 
 func (r *Registry) RegisterDIService(service ...*ServiceDefinition) *Registry {
 	r.servicesDefinitions = append(r.servicesDefinitions, service...)
-	return r
-}
-
-func (r *Registry) RegisterGinMiddleware(provider ...GinMiddleWareProvider) *Registry {
-	r.middlewares = append(r.middlewares, provider...)
 	return r
 }
 

@@ -23,12 +23,11 @@ const (
 	ginKey key = iota
 )
 
+type GinInitHandler func(Router *gin.Engine)
+
 func GinFromContext(ctx context.Context) *gin.Context {
 	return ctx.Value(ginKey).(*gin.Context)
 }
-
-type GinMiddleWareProvider func() gin.HandlerFunc
-type GinInitHandler func(Router *gin.Engine)
 
 func contextToContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -49,7 +48,7 @@ func afterRequestMiddleware() gin.HandlerFunc {
 	}
 }
 
-func InitGin(s *Spring, server graphql.ExecutableSchema, ginInitHandler GinInitHandler) *gin.Engine {
+func initGin(server graphql.ExecutableSchema, ginInitHandler GinInitHandler) *gin.Engine {
 	if DIC().App().IsInProdMode() {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -61,12 +60,6 @@ func InitGin(s *Spring, server graphql.ExecutableSchema, ginInitHandler GinInitH
 
 	ginEngine.Use(contextToContextMiddleware())
 	ginEngine.Use(afterRequestMiddleware())
-	for _, provider := range s.registry.middlewares {
-		middleware := provider()
-		if middleware != nil {
-			ginEngine.Use(middleware)
-		}
-	}
 
 	ginEngine.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
 	ginEngine.GET("/", playgroundHandler())
