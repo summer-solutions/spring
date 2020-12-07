@@ -37,7 +37,7 @@ func (script *testScript) Interval() time.Duration {
 }
 
 func main() {
-	r := spring.New("test_script").RegisterDIService()
+	r := spring.New("test_script")
 	r.RegisterDIService(spring.ServiceDefinitionDynamicScript(&testScript{"hello", "takie tam", false},
 		&testScript{"hello-second", "takie tam inne description", true})).Build()
 }

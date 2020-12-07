@@ -22,6 +22,10 @@ type ScriptInterval interface {
 	Interval() time.Duration
 }
 
+type ScriptIntermediate interface {
+	IsIntermediate() bool
+}
+
 type ScriptIntervalOptional interface {
 	IntervalActive() bool
 }
@@ -93,6 +97,10 @@ func listScrips() {
 				} else {
 					options = append(options, "inactive")
 				}
+			}
+			intermediate, is := def.(ScriptIntermediate)
+			if is && intermediate.IsIntermediate() {
+				options = append(options, "intermediate")
 			}
 			output = append(output, strings.Join([]string{def.Code(), strings.Join(options, ","), def.Description()}, " | "))
 		}
