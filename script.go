@@ -31,21 +31,19 @@ type ScriptOptional interface {
 }
 
 func (s *Spring) RunScript(script Script) {
-	go func(script Script) {
-		_, isInterval := script.(ScriptInterval)
-		for {
-			valid := s.runScript(script)
-			if !isInterval {
-				break
-			}
-			//TODO
-			if valid {
-				time.Sleep(time.Minute)
-			} else {
-				time.Sleep(time.Second * 10)
-			}
+	_, isInterval := script.(ScriptInterval)
+	for {
+		valid := s.runScript(script)
+		if !isInterval {
+			break
 		}
-	}(script)
+		//TODO
+		if valid {
+			time.Sleep(time.Minute)
+		} else {
+			time.Sleep(time.Second * 10)
+		}
+	}
 }
 
 func ServiceDefinitionDynamicScript(scripts ...Script) *ServiceDefinition {
