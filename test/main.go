@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/summer-solutions/spring"
 )
 
@@ -24,6 +26,14 @@ func (script *testScript) Code() string {
 
 func (script *testScript) Description() string {
 	return script.description
+}
+
+func (script *testScript) Active() bool {
+	return true
+}
+
+func (script *testScript) Interval() time.Duration {
+	return 3 * time.Second
 }
 
 func main() {

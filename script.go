@@ -19,18 +19,25 @@ type Script interface {
 }
 
 type ScriptInterval interface {
-	Script
-	Interval() string
+	Interval() time.Duration
+}
+
+type ScriptIntervalOptional interface {
+	IntervalActive() bool
+}
+
+type ScriptOptional interface {
+	Active() bool
 }
 
 func (s *Spring) RunScript(script Script) {
-	s.runScript(script)
-}
-
-func (s *Spring) RunScriptInterval(script ScriptInterval) {
-	go func(script ScriptInterval) {
+	go func(script Script) {
+		_, isInterval := script.(ScriptInterval)
 		for {
 			valid := s.runScript(script)
+			if !isInterval {
+				break
+			}
 			//TODO
 			if valid {
 				time.Sleep(time.Minute)
@@ -62,17 +69,36 @@ func listScrips() {
 	service, has := GetServiceOptional("scripts")
 	if has {
 		output := []string{
-			"NAME | UNIQUE | DESCRIPTION ",
+			"NAME | OPTIONS | DESCRIPTION ",
 		}
 		for _, def := range service.([]Script) {
-			var unique string
-			if def.Unique() {
-				unique = "true"
+			options := make([]string, 0)
+			interval, is := def.(ScriptInterval)
+			if is {
+				options = append(options, "interval")
+				duration := "every " + interval.Interval().String()
+				_, is := def.(ScriptIntervalOptional)
+				if is {
+					duration += " with condition"
+				}
+				options = append(options, duration)
 			}
-			output = append(output, strings.Join([]string{def.Code(), unique, def.Description()}, " | "))
+
+			if def.Unique() {
+				options = append(options, "unique")
+			}
+			optional, is := def.(ScriptOptional)
+			if is {
+				options = append(options, "optional")
+				if optional.Active() {
+					options = append(options, "active")
+				} else {
+					options = append(options, "inactive")
+				}
+			}
+			output = append(output, strings.Join([]string{def.Code(), strings.Join(options, ","), def.Description()}, " | "))
 		}
-		result := columnize.SimpleFormat(output)
-		fmt.Println(result)
+		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output))
 	}
 	os.Exit(0)
 }
