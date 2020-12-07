@@ -71,7 +71,9 @@ func InitGin(s *Spring, server graphql.ExecutableSchema, ginInitHandler GinInitH
 	ginEngine.POST("/query", timeout.New(timeout.WithTimeout(10*time.Second), timeout.WithHandler(graphqlHandler(server))))
 	ginEngine.GET("/", playgroundHandler())
 
-	ginInitHandler(ginEngine)
+	if ginInitHandler != nil {
+		ginInitHandler(ginEngine)
+	}
 
 	return ginEngine
 }
