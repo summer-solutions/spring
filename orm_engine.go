@@ -1,8 +1,6 @@
 package spring
 
 import (
-	"fmt"
-
 	"github.com/sarulabs/di"
 	"github.com/summer-solutions/orm"
 )
@@ -26,7 +24,7 @@ func serviceDefinitionOrmEngine(global bool) *ServiceDefinition {
 		Build: func(ctn di.Container) (interface{}, error) {
 			ormConfigService, err := ctn.SafeGet("orm_config")
 			if err != nil {
-				return nil, fmt.Errorf("missing orm config service")
+				return nil, err
 			}
 			ormEngine := ormConfigService.(orm.ValidatedRegistry).CreateEngine()
 			return ormEngine, nil
