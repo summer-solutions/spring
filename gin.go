@@ -41,7 +41,7 @@ func afterRequestMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		err := getContainerFromRequest(c).Delete()
+		err := getContainerFromRequest(c.Request.Context()).Delete()
 		if err != nil {
 			panic(err)
 		}
