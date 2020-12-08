@@ -86,8 +86,10 @@ func (r *Registry) initializeIoCHandlers() {
 			def.Flags(flagsRegistry)
 		}
 	}
-	flagsRegistry.Bool("list-scripts", false, "list all available scripts")
-	flagsRegistry.String("run-script", "", "run script")
+	if !flag.Parsed() {
+		flagsRegistry.Bool("list-scripts", false, "list all available scripts")
+		flagsRegistry.String("run-script", "", "run script")
+	}
 
 	err := ioCBuilder.Add()
 
