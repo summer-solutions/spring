@@ -6,9 +6,10 @@ const ModeLocal = "local"
 const ModeProd = "prod"
 
 type AppDefinition struct {
-	mode  string
-	name  string
-	flags *Flags
+	mode     string
+	name     string
+	flags    *Flags
+	registry *Registry
 }
 
 func (app *AppDefinition) Name() string {

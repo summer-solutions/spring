@@ -3,11 +3,12 @@ package main
 import (
 	"time"
 
+	"github.com/sarulabs/di"
+
 	"github.com/summer-solutions/spring"
 )
 
 type testScript struct {
-	name        string
 	description string
 	unique      bool
 }
@@ -18,10 +19,6 @@ func (script *testScript) Run() error {
 
 func (script *testScript) Unique() bool {
 	return script.unique
-}
-
-func (script *testScript) Code() string {
-	return script.name
 }
 
 func (script *testScript) Description() string {
@@ -38,6 +35,21 @@ func (script *testScript) Interval() time.Duration {
 
 func main() {
 	r := spring.New("test_script")
-	r.RegisterDIService(spring.ServiceDefinitionDynamicScript(&testScript{"hello", "takie tam", false},
-		&testScript{"hello-second", "takie tam inne description", true})).Build()
+	r.RegisterDIService(&spring.ServiceDefinition{
+		Name:   "aa",
+		Global: true,
+		Script: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return &testScript{"takie tam", false}, nil
+		},
+	})
+	r.RegisterDIService(&spring.ServiceDefinition{
+		Name:   "bb",
+		Global: true,
+		Script: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return &testScript{"takie tam dwa", true}, nil
+		},
+	})
+	r.RegisterDIService().Build()
 }

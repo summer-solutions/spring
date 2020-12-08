@@ -8,11 +8,9 @@ import (
 	"time"
 
 	"github.com/ryanuber/columnize"
-	"github.com/sarulabs/di"
 )
 
 type Script interface {
-	Code() string
 	Description() string
 	Run() error
 	Unique() bool
@@ -50,30 +48,14 @@ func (s *Spring) RunScript(script Script) {
 	}
 }
 
-func ServiceDefinitionDynamicScript(scripts ...Script) *ServiceDefinition {
-	return &ServiceDefinition{
-		Name:   "scripts",
-		Global: true,
-		Build: func(ctn di.Container) (interface{}, error) {
-			return scripts, nil
-		},
-		Flags: func(registry *FlagsRegistry) {
-			total := len(scripts)
-			if len(scripts) > 0 {
-				registry.Bool("list-scripts", false, fmt.Sprintf("list all %d available scripts", total))
-				registry.String("run-script", "", "run script")
-			}
-		},
-	}
-}
-
 func listScrips() {
-	service, has := GetServiceOptional("scripts")
-	if has {
+	scripts := DIC().App().registry.scripts
+	if len(scripts) > 0 {
 		output := []string{
 			"NAME | OPTIONS | DESCRIPTION ",
 		}
-		for _, def := range service.([]Script) {
+		for _, defCode := range scripts {
+			def := GetServiceRequired(defCode).(Script)
 			options := make([]string, 0)
 			interval, is := def.(ScriptInterval)
 			if is {
@@ -102,20 +84,25 @@ func listScrips() {
 			if is && intermediate.IsIntermediate() {
 				options = append(options, "intermediate")
 			}
-			output = append(output, strings.Join([]string{def.Code(), strings.Join(options, ","), def.Description()}, " | "))
+			output = append(output, strings.Join([]string{defCode, strings.Join(options, ","), def.Description()}, " | "))
 		}
 		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output) + "\n")
 	}
 }
 
 func runDynamicScrips(code string) {
-	service, has := GetServiceOptional("scripts")
-	if !has {
+	scripts := DIC().App().registry.scripts
+	if len(scripts) == 0 {
 		panic(fmt.Sprintf("unknown script %s", code))
 	}
-	for _, def := range service.([]Script) {
-		if def.Code() == code {
-			err := def.Run()
+	for _, defCode := range scripts {
+		if defCode == code {
+			def, has := GetServiceOptional(defCode)
+			if !has {
+				panic(fmt.Sprintf("unknown script %s", code))
+			}
+			defScript := def.(Script)
+			err := defScript.Run()
 			if err != nil {
 				panic(err)
 			}

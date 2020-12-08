@@ -12,6 +12,7 @@ var container di.Container
 type ServiceDefinition struct {
 	Name   string
 	Global bool
+	Script bool
 	Build  func(ctn di.Container) (interface{}, error)
 	Close  func(obj interface{}) error
 	Flags  func(registry *FlagsRegistry)

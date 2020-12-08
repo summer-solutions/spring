@@ -10,6 +10,7 @@ import (
 type Registry struct {
 	app                 *AppDefinition
 	servicesDefinitions []*ServiceDefinition
+	scripts             []string
 }
 
 type Spring struct {
@@ -21,7 +22,10 @@ func New(appName string) *Registry {
 	if !hasMode {
 		mode = ModeLocal
 	}
-	return &Registry{app: &AppDefinition{mode: mode, name: appName}}
+	app := &AppDefinition{mode: mode, name: appName}
+	r := &Registry{app: app}
+	app.registry = r
+	return r
 }
 
 func (r *Registry) Build() *Spring {
@@ -65,6 +69,9 @@ func (r *Registry) initializeIoCHandlers() {
 		} else {
 			scope = di.Request
 		}
+		if def.Script {
+			r.scripts = append(r.scripts, def.Name)
+		}
 
 		err := ioCBuilder.Add(di.Def{
 			Name:  def.Name,
@@ -79,6 +86,8 @@ func (r *Registry) initializeIoCHandlers() {
 			def.Flags(flagsRegistry)
 		}
 	}
+	flagsRegistry.Bool("list-scripts", false, "list all available scripts")
+	flagsRegistry.String("run-script", "", "run script")
 
 	err := ioCBuilder.Add()
 
