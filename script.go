@@ -88,6 +88,7 @@ func listScrips() {
 		}
 		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output) + "\n")
 	}
+	os.Exit(0)
 }
 
 func runDynamicScrips(code string) {
