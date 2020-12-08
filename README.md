@@ -218,20 +218,20 @@ First You need to define script definition that implements spring.Script interfa
 
 type TestScript struct {}
 
-func (script *testScript) Code() string {
+func (script *TestScript) Code() string {
     return "test-script"
 }
 
-func (script *testScript) Unique() bool {
+func (script *TestScript) Unique() bool {
     // if true you can't run more than one script at the same time
     return false
 }
 
-func (script *testScript) Description() string {
+func (script *TestScript) Description() string {
     return "script description"
 }
 
-func (script *testScript) Run() error {
+func (script *TestScript) Run() error {
     // put login here
     return nil
 }
@@ -243,25 +243,25 @@ Methods above are required. Optionally you can also implement these interfaces:
 ```go
 
 // spring.ScriptInterval interface
-func (script *testScript) Interval() time.Duration {                                                    
+func (script *TestScript) Interval() time.Duration {                                                    
     // run script every minute
     return time.Minute 
 }
 
 // spring.ScriptIntervalOptional interface
-func (script *testScript) IntervalActive() bool {                                                    
+func (script *TestScript) IntervalActive() bool {                                                    
     // only run first day of month
     return time.Now().Day() == 1
 }
 
 // spring.ScriptIntermediate interface
-func (script *testScript) IsIntermediate() bool {                                                    
+func (script *TestScript) IsIntermediate() bool {                                                    
     // script is intermediate, for example is listening for data in chain
     return true
 }
 
 // spring.ScriptOptional interface
-func (script *testScript) Active() bool {                                                    
+func (script *TestScript) Active() bool {                                                    
     // this script is visible only in local mode
     return DIC().App().IsInLocalMode()
 }
@@ -287,8 +287,16 @@ package main
 import "github.com/summer-solutions/spring"
 
 func main() {
+	
     spring.New("app_name").RegisterDIService(
-        spring.ServiceDefinitionDynamicScript(&TestScript{}, &AnotherScript{}),
+        &spring.ServiceDefinition{
+            Name:   "my-script",
+            Global: true,
+            Script: true, // you need to set true here
+            Build: func(ctn di.Container) (interface{}, error) {
+                return &TestScript{}, nil
+            },
+        },
     ).Build()
 }
 ``` 
@@ -302,5 +310,5 @@ You can see all available script by using special flag **-list-scripts**:
 To run script:
 
 ```shell script
-./app -run-script script-code
+./app -run-script my-script
 ```

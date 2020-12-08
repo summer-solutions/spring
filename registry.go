@@ -96,6 +96,8 @@ func (r *Registry) initializeIoCHandlers() {
 	}
 	container = ioCBuilder.Build()
 	dicInstance = &dic{}
-	flag.Parse()
+	if !flag.Parsed() {
+		flag.Parse()
+	}
 	r.app.flags = &Flags{flagsRegistry}
 }
