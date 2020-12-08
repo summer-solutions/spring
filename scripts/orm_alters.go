@@ -11,7 +11,7 @@ import (
 
 func ORMAlters() *spring.ServiceDefinition {
 	return &spring.ServiceDefinition{
-		Name:   "log",
+		Name:   "orm-alters",
 		Global: true,
 		Script: true,
 		Build: func(ctn di.Container) (interface{}, error) {
