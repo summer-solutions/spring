@@ -48,7 +48,7 @@ func afterRequestMiddleware() gin.HandlerFunc {
 	}
 }
 
-func initGin(server graphql.ExecutableSchema, ginInitHandler GinInitHandler) *gin.Engine {
+func InitGin(server graphql.ExecutableSchema, ginInitHandler GinInitHandler) *gin.Engine {
 	if DIC().App().IsInProdMode() {
 		gin.SetMode(gin.ReleaseMode)
 	}

@@ -12,6 +12,6 @@ func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema, gi
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
-	ginEngine := initGin(server, ginInitHandler)
+	ginEngine := InitGin(server, ginInitHandler)
 	panic(ginEngine.Run(":" + port))
 }
