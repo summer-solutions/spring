@@ -82,7 +82,7 @@ func (r *Registry) initializeIoCHandlers() {
 		if err != nil {
 			panic(err)
 		}
-		if def.Flags != nil {
+		if def.Flags != nil && !flag.Parsed() {
 			def.Flags(flagsRegistry)
 		}
 	}
