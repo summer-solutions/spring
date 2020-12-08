@@ -73,7 +73,14 @@ func (v *Config) loadEnvConfig() error {
 			if envVal == "" {
 				return errors.New("missing value for ENV variable " + envKey)
 			}
-			v.Viper.Set(key, os.Getenv(envKey))
+			s := strings.Split(key, ".")
+			if len(s) > 1 {
+				subKey := strings.Join(s[0:len(s)-1], ".")
+				subVal := v.Viper.Get(subKey).(map[string]interface{})
+				subVal[s[len(s)-1]] = os.Getenv(envKey)
+			} else {
+				v.Viper.Set(key, os.Getenv(envKey))
+			}
 		}
 	}
 

@@ -51,5 +51,6 @@ func main() {
 			return &testScript{"takie tam dwa", true}, nil
 		},
 	})
+	r.RegisterDIService(spring.ServiceProviderConfigDirectory("../config"))
 	r.RegisterDIService().Build()
 }
