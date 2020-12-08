@@ -3,9 +3,22 @@ package scripts
 import (
 	"os"
 
+	"github.com/sarulabs/di"
+
 	"github.com/fatih/color"
 	"github.com/summer-solutions/spring"
 )
+
+func ORMAlters() *spring.ServiceDefinition {
+	return &spring.ServiceDefinition{
+		Name:   "log",
+		Global: true,
+		Script: true,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return &ORMAltersScript{}, nil
+		},
+	}
+}
 
 type ORMAltersScript struct {
 }
@@ -19,12 +32,8 @@ func (script *ORMAltersScript) Unique() bool {
 	return true
 }
 
-func (script *ORMAltersScript) Code() string {
-	return "orm-alters"
-}
-
 func (script *ORMAltersScript) Description() string {
-	return "orm-alters"
+	return "show all MySQL schema changes"
 }
 
 func (script *ORMAltersScript) Run() error {
