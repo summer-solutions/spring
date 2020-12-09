@@ -3,6 +3,7 @@ package spring
 import "github.com/sarulabs/di"
 
 const ModeLocal = "local"
+const ModeTest = "test"
 const ModeProd = "prod"
 
 type AppDefinition struct {
@@ -26,6 +27,10 @@ func (app *AppDefinition) Flags() *Flags {
 
 func (app *AppDefinition) IsInLocalMode() bool {
 	return app.IsInMode(ModeLocal)
+}
+
+func (app *AppDefinition) IsInTestMode() bool {
+	return app.IsInMode(ModeTest)
 }
 
 func (app *AppDefinition) IsInProdMode() bool {
