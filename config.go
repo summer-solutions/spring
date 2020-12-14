@@ -2,10 +2,11 @@ package spring
 
 import (
 	"errors"
-	"github.com/joho/godotenv"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/joho/godotenv"
 
 	"github.com/sarulabs/di"
 	"github.com/spf13/viper"
