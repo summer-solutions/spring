@@ -23,7 +23,7 @@ const (
 	ginKey key = iota
 )
 
-type GinInitHandler func(Router *gin.Engine)
+type GinInitHandler func(ginEngine *gin.Engine)
 
 func GinFromContext(ctx context.Context) *gin.Context {
 	return ctx.Value(ginKey).(*gin.Context)

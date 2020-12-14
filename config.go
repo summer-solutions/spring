@@ -2,11 +2,11 @@ package spring
 
 import (
 	"errors"
+	"github.com/joho/godotenv"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/sarulabs/di"
 	"github.com/spf13/viper"
 )
@@ -56,13 +56,11 @@ func newViperConfig(appName, localConfigFolder string) (*Config, error) {
 
 func (v *Config) loadEnvConfig() error {
 	mainConfigFolderPath := v.getMainPath()
-	if _, err := os.Stat(mainConfigFolderPath + "/../.env.local"); os.IsNotExist(err) {
-		return nil
-	}
-
-	err := godotenv.Load(mainConfigFolderPath + "/../.env.local")
-	if err != nil {
-		return err
+	if _, err := os.Stat(mainConfigFolderPath + "/../.env.local"); !os.IsNotExist(err) {
+		err := godotenv.Load(mainConfigFolderPath + "/../.env.local")
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, key := range v.Viper.AllKeys() {
