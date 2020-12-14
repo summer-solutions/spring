@@ -68,8 +68,8 @@ func (v *Config) loadEnvConfig() error {
 		val, ok := v.Viper.Get(key).(string)
 		if ok && strings.HasPrefix(v.Viper.Get(key).(string), "ENV[") {
 			envKey := strings.TrimLeft(strings.TrimRight(val, "]"), "ENV[")
-			envVal := os.Getenv(envKey)
-			if envVal == "" {
+			_, has := os.LookupEnv(envKey)
+			if !has {
 				return errors.New("missing value for ENV variable " + envKey)
 			}
 			s := strings.Split(key, ".")
