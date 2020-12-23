@@ -27,6 +27,9 @@ func serviceDefinitionOrmEngine(global bool) *ServiceDefinition {
 				return nil, err
 			}
 			ormEngine := ormConfigService.(orm.ValidatedRegistry).CreateEngine()
+			if !global {
+				ormEngine.EnableRequestCache(true)
+			}
 			return ormEngine, nil
 		},
 	}
