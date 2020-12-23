@@ -31,6 +31,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
 	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/tools v0.0.0-20201223174954-9cbb1efa7745 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/DataDog/dd-trace-go.v1 v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
