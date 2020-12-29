@@ -28,7 +28,7 @@ func ServiceProviderConfigDirectory(configDirectory string) *ServiceDefinition {
 	}
 }
 
-func newViperConfig(appName, localConfigFolder string) (*Config, error) {
+func newViperConfig(appName, mode, localConfigFolder string) (*Config, error) {
 	viper.SetConfigName(configName)
 
 	configFolder, hasConfigFolder := os.LookupEnv("SPRING_CONFIG_FOLDER")
@@ -47,7 +47,7 @@ func newViperConfig(appName, localConfigFolder string) (*Config, error) {
 		viper.GetViper(),
 	}
 
-	err = viperConfig.loadEnvConfig()
+	err = viperConfig.loadEnvConfig(mode)
 	if err != nil {
 		return nil, err
 	}
@@ -55,10 +55,10 @@ func newViperConfig(appName, localConfigFolder string) (*Config, error) {
 	return viperConfig, nil
 }
 
-func (v *Config) loadEnvConfig() error {
+func (v *Config) loadEnvConfig(mode string) error {
 	mainConfigFolderPath := v.getMainPath()
-	if _, err := os.Stat(mainConfigFolderPath + "/../.env.local"); !os.IsNotExist(err) {
-		err := godotenv.Load(mainConfigFolderPath + "/../.env.local")
+	if _, err := os.Stat(mainConfigFolderPath + "/../.env." + mode); !os.IsNotExist(err) {
+		err := godotenv.Load(mainConfigFolderPath + "/../.env." + mode)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func serviceConfig() *ServiceDefinition {
 		Global: true,
 		Build: func(ctn di.Container) (interface{}, error) {
 			configDirectory := ctn.Get("config_directory").(string)
-			return newViperConfig(DIC().App().Name(), configDirectory)
+			return newViperConfig(DIC().App().Name(), DIC().App().Mode(), configDirectory)
 		},
 	}
 }
