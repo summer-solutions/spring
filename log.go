@@ -71,7 +71,7 @@ func (l *RequestLog) Log(ctx *gin.Context) apexLog.Interface {
 func (r *Registry) initializeLog() {
 	if DIC().App().IsInProdMode() {
 		h, has := GetServiceOptional("log_handler")
-		if !has {
+		if has {
 			apexLog.SetHandler(h.(apexLog.Handler))
 		} else {
 			apexLog.SetHandler(json.Default)
