@@ -41,7 +41,7 @@ func main() {
     graphQLExecutableSchema := ... // setup graphql.ExecutableSchema 
     ginHandler := // setup gin routes and middlewares
     // run http server
-    spring.New("app_name").Build().Newrver(8080, graphQLExecutableSchema, ginHandler)
+    spring.New("app_name").Build().RunServer(8080, graphQLExecutableSchema, ginHandler)
 }
 
 ``` 
