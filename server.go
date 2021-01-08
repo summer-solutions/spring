@@ -2,6 +2,7 @@ package spring
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -12,8 +13,15 @@ func (s *Spring) RunServer(defaultPort uint, server graphql.ExecutableSchema, gi
 	if port == "" {
 		port = fmt.Sprintf("%d", defaultPort)
 	}
-	ginEngine := InitGin(server, ginInitHandler)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: InitGin(server, ginInitHandler),
+	}
 	func() {
-		panic(ginEngine.Run(":" + port))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			panic(err)
+		}
+		s.done <- true
 	}()
+	s.await()
 }

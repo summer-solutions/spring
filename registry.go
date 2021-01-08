@@ -18,10 +18,11 @@ type Registry struct {
 }
 
 type Spring struct {
-	registry  *Registry
-	ctx       context.Context
-	cancel    context.CancelFunc
-	killAwait bool
+	registry *Registry
+	ctx      context.Context
+	cancel   context.CancelFunc
+	done     chan bool
+	exit     chan int
 }
 
 func New(appName string) *Registry {
@@ -44,27 +45,11 @@ func (r *Registry) Build() *Spring {
 	}
 	scriptToRun := flags.String("run-script")
 	ctx, cancel := context.WithCancel(context.Background())
+	s := &Spring{registry: r, ctx: ctx, cancel: cancel, done: make(chan bool), exit: make(chan int)}
 	if scriptToRun != "" {
-		runDynamicScrips(ctx, scriptToRun)
+		s.runDynamicScrips(ctx, scriptToRun)
 	}
-	return &Spring{registry: r, ctx: ctx, cancel: cancel}
-}
-
-func (s *Spring) Await() {
-	termChan := make(chan os.Signal)
-	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
-	cancel := func() {
-		<-termChan
-		DIC().Log().Debug("CANCELING")
-		s.cancel()
-		time.Sleep(time.Millisecond * 300)
-		DIC().Log().Debug("CANCELED")
-	}
-	if s.killAwait {
-		go cancel()
-	} else {
-		cancel()
-	}
+	return s
 }
 
 func (r *Registry) RegisterDIService(service ...*ServiceDefinition) *Registry {
@@ -127,4 +112,21 @@ func (r *Registry) initializeIoCHandlers() {
 		flag.Parse()
 	}
 	r.app.flags = &Flags{flagsRegistry}
+}
+
+func (s *Spring) await() {
+	termChan := make(chan os.Signal, 1)
+	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case code := <-s.exit:
+		s.cancel()
+		os.Exit(code)
+	case <-s.done:
+		s.cancel()
+	case <-termChan:
+		DIC().Log().Debug("TERMINATING")
+		s.cancel()
+		time.Sleep(time.Millisecond * 300)
+		DIC().Log().Debug("TERMINATED")
+	}
 }

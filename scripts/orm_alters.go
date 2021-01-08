@@ -2,7 +2,6 @@ package scripts
 
 import (
 	"context"
-	"os"
 
 	"github.com/sarulabs/di"
 
@@ -37,11 +36,9 @@ func (script *ORMAltersScript) Description() string {
 	return "show all MySQL schema changes"
 }
 
-func (script *ORMAltersScript) Run(_ context.Context) error {
+func (script *ORMAltersScript) Run(_ context.Context, exit spring.Exit) {
 	ormEngine, _ := spring.DIC().OrmEngine()
-
 	alters := ormEngine.GetAlters()
-
 	for _, alter := range alters {
 		if alter.Safe {
 			color.Green("%s\n\n", alter.SQL)
@@ -49,9 +46,7 @@ func (script *ORMAltersScript) Run(_ context.Context) error {
 			color.Red("%s\n\n", alter.SQL)
 		}
 	}
-
 	if len(alters) > 0 {
-		os.Exit(1)
+		exit.Error()
 	}
-	return nil
 }

@@ -13,8 +13,30 @@ import (
 
 type Script interface {
 	Description() string
-	Run(ctx context.Context) error
+	Run(ctx context.Context, exit Exit)
 	Unique() bool
+}
+
+type Exit interface {
+	Valid()
+	Error()
+	Custom(exitCode int)
+}
+
+type exit struct {
+	s *Spring
+}
+
+func (e *exit) Custom(exitCode int) {
+	e.s.exit <- exitCode
+}
+
+func (e *exit) Valid() {
+	e.Custom(0)
+}
+
+func (e *exit) Error() {
+	e.Custom(1)
 }
 
 type ScriptInterval interface {
@@ -33,15 +55,13 @@ type ScriptOptional interface {
 	Active() bool
 }
 
-func (s *Spring) RunScript(script Script) *Spring {
+func (s *Spring) RunScript(script Script) {
 	_, isInterval := script.(ScriptInterval)
-	if !isInterval {
-		s.killAwait = true
-	}
 	go func() {
 		for {
 			valid := s.runScript(script)
 			if !isInterval {
+				s.done <- true
 				break
 			}
 			//TODO
@@ -52,7 +72,7 @@ func (s *Spring) RunScript(script Script) *Spring {
 			}
 		}
 	}()
-	return s
+	s.await()
 }
 
 func listScrips() {
@@ -95,10 +115,9 @@ func listScrips() {
 		}
 		_, _ = os.Stdout.WriteString(columnize.SimpleFormat(output) + "\n")
 	}
-	os.Exit(0)
 }
 
-func runDynamicScrips(ctx context.Context, code string) {
+func (s *Spring) runDynamicScrips(ctx context.Context, code string) {
 	scripts := DIC().App().registry.scripts
 	if len(scripts) == 0 {
 		panic(fmt.Sprintf("unknown script %s", code))
@@ -110,11 +129,8 @@ func runDynamicScrips(ctx context.Context, code string) {
 				panic(fmt.Sprintf("unknown script %s", code))
 			}
 			defScript := def.(Script)
-			err := defScript.Run(ctx)
-			if err != nil {
-				panic(err)
-			}
-			os.Exit(0)
+			defScript.Run(ctx, &exit{s: s})
+			return
 		}
 	}
 	panic(fmt.Sprintf("unknown script %s", code))
@@ -136,10 +152,7 @@ func (s *Spring) runScript(script Script) bool {
 				valid = false
 			}
 		}()
-		err := script.Run(s.ctx)
-		if err != nil {
-			panic(err)
-		}
+		script.Run(s.ctx, &exit{s: s})
 		return valid
 	}()
 }

@@ -14,8 +14,7 @@ type testScript struct {
 	unique      bool
 }
 
-func (script *testScript) Run(_ context.Context) error {
-	return nil
+func (script *testScript) Run(_ context.Context, _ spring.Exit) {
 }
 
 func (script *testScript) Unique() bool {

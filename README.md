@@ -41,7 +41,7 @@ func main() {
     graphQLExecutableSchema := ... // setup graphql.ExecutableSchema 
     ginHandler := // setup gin routes and middlewares
     // run http server
-    spring.New("app_name").Build().RunServer(8080, graphQLExecutableSchema, ginHandler).Await()
+    spring.New("app_name").Build().Newrver(8080, graphQLExecutableSchema, ginHandler)
 }
 
 ``` 
@@ -231,9 +231,11 @@ func (script *TestScript) Description() string {
     return "script description"
 }
 
-func (script *TestScript) Run(ctx context.Context) error {
-    // put login here
-    return nil
+func (script *TestScript) Run(ctx context.Context, exit spring.Exit) {
+    // put logic here
+	if shouldExitWithCode2 {
+        exit.Error()	// you can exit script and specify exit code
+    }
 }
 
 ```
@@ -275,7 +277,7 @@ package main
 import "github.com/summer-solutions/spring"
 
 func main() {
-	spring.New("app_name").Build().RunScript(&TestScript{}).Await() // for Intermediate scripts
+	spring.New("app_name").Build().RunScript(&TestScript{})
 }
 ``` 
 
