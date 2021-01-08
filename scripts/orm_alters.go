@@ -1,6 +1,7 @@
 package scripts
 
 import (
+	"context"
 	"os"
 
 	"github.com/sarulabs/di"
@@ -36,7 +37,7 @@ func (script *ORMAltersScript) Description() string {
 	return "show all MySQL schema changes"
 }
 
-func (script *ORMAltersScript) Run() error {
+func (script *ORMAltersScript) Run(_ context.Context) error {
 	ormEngine, _ := spring.DIC().OrmEngine()
 
 	alters := ormEngine.GetAlters()

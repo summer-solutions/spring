@@ -1,7 +1,9 @@
 package spring
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/sarulabs/di"
 	"github.com/tj/assert"
@@ -11,7 +13,7 @@ type testScript struct {
 	RunCounter int
 }
 
-func (script *testScript) Run() error {
+func (script *testScript) Run(_ context.Context) error {
 	script.RunCounter++
 	return nil
 }
@@ -40,7 +42,8 @@ func TestRunScript(t *testing.T) {
 	s := r.RegisterDIService(testService).Build()
 
 	testScript := &testScript{}
-	s.RunScript(testScript)
+	s.RunScript(testScript).Await()
+	time.Sleep(time.Millisecond * 10)
 	assert.Equal(t, 1, testScript.RunCounter)
 	assert.Equal(t, "test_script", DIC().App().Name())
 	assert.Equal(t, "hello", GetServiceRequired("test_service"))

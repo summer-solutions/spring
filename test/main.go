@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/sarulabs/di"
@@ -13,7 +14,7 @@ type testScript struct {
 	unique      bool
 }
 
-func (script *testScript) Run() error {
+func (script *testScript) Run(_ context.Context) error {
 	return nil
 }
 

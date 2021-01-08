@@ -1,6 +1,7 @@
 package spring
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -12,7 +13,7 @@ import (
 
 type Script interface {
 	Description() string
-	Run() error
+	Run(ctx context.Context) error
 	Unique() bool
 }
 
@@ -32,20 +33,26 @@ type ScriptOptional interface {
 	Active() bool
 }
 
-func (s *Spring) RunScript(script Script) {
+func (s *Spring) RunScript(script Script) *Spring {
 	_, isInterval := script.(ScriptInterval)
-	for {
-		valid := s.runScript(script)
-		if !isInterval {
-			break
-		}
-		//TODO
-		if valid {
-			time.Sleep(time.Minute)
-		} else {
-			time.Sleep(time.Second * 10)
-		}
+	if !isInterval {
+		s.killAwait = true
 	}
+	go func() {
+		for {
+			valid := s.runScript(script)
+			if !isInterval {
+				break
+			}
+			//TODO
+			if valid {
+				time.Sleep(time.Minute)
+			} else {
+				time.Sleep(time.Second * 10)
+			}
+		}
+	}()
+	return s
 }
 
 func listScrips() {
@@ -91,7 +98,7 @@ func listScrips() {
 	os.Exit(0)
 }
 
-func runDynamicScrips(code string) {
+func runDynamicScrips(ctx context.Context, code string) {
 	scripts := DIC().App().registry.scripts
 	if len(scripts) == 0 {
 		panic(fmt.Sprintf("unknown script %s", code))
@@ -103,7 +110,7 @@ func runDynamicScrips(code string) {
 				panic(fmt.Sprintf("unknown script %s", code))
 			}
 			defScript := def.(Script)
-			err := defScript.Run()
+			err := defScript.Run(ctx)
 			if err != nil {
 				panic(err)
 			}
@@ -129,7 +136,7 @@ func (s *Spring) runScript(script Script) bool {
 				valid = false
 			}
 		}()
-		err := script.Run()
+		err := script.Run(s.ctx)
 		if err != nil {
 			panic(err)
 		}

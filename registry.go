@@ -1,8 +1,12 @@
 package spring
 
 import (
+	"context"
 	"flag"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/sarulabs/di"
 )
@@ -14,7 +18,10 @@ type Registry struct {
 }
 
 type Spring struct {
-	registry *Registry
+	registry  *Registry
+	ctx       context.Context
+	cancel    context.CancelFunc
+	killAwait bool
 }
 
 func New(appName string) *Registry {
@@ -36,10 +43,28 @@ func (r *Registry) Build() *Spring {
 		listScrips()
 	}
 	scriptToRun := flags.String("run-script")
+	ctx, cancel := context.WithCancel(context.Background())
 	if scriptToRun != "" {
-		runDynamicScrips(scriptToRun)
+		runDynamicScrips(ctx, scriptToRun)
 	}
-	return &Spring{registry: r}
+	return &Spring{registry: r, ctx: ctx, cancel: cancel}
+}
+
+func (s *Spring) Await() {
+	termChan := make(chan os.Signal)
+	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
+	cancel := func() {
+		<-termChan
+		DIC().Log().Debug("CANCELING")
+		s.cancel()
+		time.Sleep(time.Millisecond * 300)
+		DIC().Log().Debug("CANCELED")
+	}
+	if s.killAwait {
+		go cancel()
+	} else {
+		cancel()
+	}
 }
 
 func (r *Registry) RegisterDIService(service ...*ServiceDefinition) *Registry {
